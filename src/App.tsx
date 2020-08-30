@@ -170,9 +170,15 @@ export default function App() {
       if (recorder) {
         console.log('Stopping recording');
         recorder.stop().then((blob) => {
-          setDownloadHref({
-            url: URL.createObjectURL(blob),
-            filename: `${new Date().toISOString()}.webm`,
+          setDownloadHref((prevDownloadUrl) => {
+            if (prevDownloadUrl) {
+              URL.revokeObjectURL(prevDownloadUrl.url);
+            }
+
+            return {
+              url: URL.createObjectURL(blob),
+              filename: `${new Date().toISOString()}.webm`,
+            };
           });
         });
         setRecorder(null);
