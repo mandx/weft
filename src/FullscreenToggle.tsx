@@ -1,4 +1,6 @@
 import React, { useState, useCallback } from 'react';
+import { ReactComponent as FullscreenIcon } from 'bootstrap-icons/icons/fullscreen.svg';
+import { ReactComponent as FullscreenExitIcon } from 'bootstrap-icons/icons/fullscreen-exit.svg';
 
 export default function FullscreenToggle() {
   const [enteringFullscreen, setEnteringFullscreen] = useState<boolean>(false);
@@ -53,6 +55,7 @@ export default function FullscreenToggle() {
       type="button"
       disabled={enteringFullscreen || exitingFullscreen}
       onClick={currentlyFullscreen ? exitFullscreen : enterFullscreen}>
+      {currentlyFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
       {currentlyFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
     </button>
   );

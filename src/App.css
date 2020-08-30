@@ -42,3 +42,9 @@
   right: 0;
   bottom: 0;
 }
+
+.downloads {
+  position: absolute;
+  right: 1em;
+  top: 1em;
+}

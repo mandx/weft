@@ -1,0 +1,119 @@
+/*
+html, body {
+  height: 90vh;
+  width: 90vw;
+}
+
+body {
+  position: relative;
+  background: darkgray;
+  font-family: sans-serif;
+}
+*/
+
+@keyframes glowing {
+  0% {
+    background-color: red;
+    box-shadow: 0 0 3px red;
+  }
+  50% {
+    background-color: red;
+    box-shadow: 0 0 10px red;
+  }
+  100% {
+    background-color: red;
+    box-shadow: 0 0 3px red;
+  }
+}
+
+.recording-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  overflow: visible;
+  flex-direction: column-reverse;
+  background: black;
+  color: white;
+  padding: 1em;
+  border-radius: 10px;
+
+  .toolbar {
+    display: flex;
+  }
+
+  button {
+    // padding: 0;
+    // margin: 0;
+    border-radius: 10px;
+    border: 1px solid silver;
+    display: inline-block;
+    background: black;
+    color: white;
+    font-weight: bold;
+    margin-left: 1em;
+    padding: 0 1em;
+
+    svg {
+      margin-inline-end: 1em;
+      vertical-align: middle;
+    }
+  }
+
+  button.recording {
+    // width: 100px;
+    // height: 100px;
+    margin-left: 0;
+    border: 0 none;
+    padding: 1em 2em;
+    background-color: red;
+    color: white;
+    animation: glowing 1300ms infinite;
+
+    &:active {
+      background: maroon;
+      animation: none;
+    }
+  }
+
+  button.recording-options {
+    padding: 0.5em 1em;
+  }
+
+  ul, li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .recording-options-menu {
+    display: none;
+    width: 100%;
+    // position: absolute;
+    // top: 100%;
+
+    li {
+      margin-bottom: 1em;
+
+      label {
+        display: flex;
+        align-items: center;
+      }
+
+      select {
+        display: block;
+      }
+
+      /*
+      select, label {
+        display: block;
+        width: 100%;
+      }
+      */
+    }
+  }
+
+  &.expanded .recording-options-menu {
+    display: block;
+  }
+}
