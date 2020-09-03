@@ -1,0 +1,19 @@
+ul.downloads {
+  padding: 0.8em 1em;
+  margin: 0;
+  list-style: none;
+  border: 1px solid silver;
+  border-radius: 10px;
+  background: black;
+
+  li form {
+    display: flex;
+  }
+
+  a {
+    &, :hover, :visited, :active {
+    color: white;
+
+    }
+  }
+}

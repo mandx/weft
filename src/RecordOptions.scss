@@ -1,16 +1,3 @@
-/*
-html, body {
-  height: 90vh;
-  width: 90vw;
-}
-
-body {
-  position: relative;
-  background: darkgray;
-  font-family: sans-serif;
-}
-*/
-
 @keyframes glowing {
   0% {
     background-color: red;
@@ -32,27 +19,28 @@ body {
   left: 0;
   display: flex;
   overflow: visible;
-  flex-direction: column-reverse;
+  align-items: stretch;
   background: black;
   color: white;
   padding: 1em;
   border-radius: 10px;
+
+  > * {
+    margin-left: 1em;
+  }
 
   .toolbar {
     display: flex;
   }
 
   button {
-    // padding: 0;
-    // margin: 0;
+    padding: 0.8em 1em 1em;
     border-radius: 10px;
     border: 1px solid silver;
     display: inline-block;
     background: black;
     color: white;
     font-weight: bold;
-    margin-left: 1em;
-    padding: 0 1em;
 
     svg {
       margin-inline-end: 1em;
@@ -61,11 +49,8 @@ body {
   }
 
   button.recording {
-    // width: 100px;
-    // height: 100px;
     margin-left: 0;
     border: 0 none;
-    padding: 1em 2em;
     background-color: red;
     color: white;
     animation: glowing 1300ms infinite;
@@ -76,8 +61,17 @@ body {
     }
   }
 
-  button.recording-options {
-    padding: 0.5em 1em;
+  .recording-options-container {
+    display: flex;
+    align-items: stretch;
+
+    .recording-options-menu {
+      display: none;
+    }
+
+    &.expanded .recording-options-menu {
+      display: block;
+    }
   }
 
   ul, li {
@@ -87,10 +81,12 @@ body {
   }
 
   .recording-options-menu {
-    display: none;
-    width: 100%;
-    // position: absolute;
-    // top: 100%;
+    position: absolute;
+    bottom: 100%;
+
+    label > select {
+      margin-left: 1em;
+    }
 
     li {
       margin-bottom: 1em;
@@ -103,17 +99,6 @@ body {
       select {
         display: block;
       }
-
-      /*
-      select, label {
-        display: block;
-        width: 100%;
-      }
-      */
     }
-  }
-
-  &.expanded .recording-options-menu {
-    display: block;
   }
 }

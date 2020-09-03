@@ -4,19 +4,11 @@ import './App.css';
 import MediaRecorderWrapper from './media-recorder-wrapper';
 import RecordOptions, { MediaAccess } from './RecordOptions';
 import { Quality, qualityToResolution, DEFAULT_RESOLUTION } from './app-types';
+import DownloadsListManager, { DownloadUrl } from './DownloadsList';
 
 const HIDDEN: React.CSSProperties = { display: 'none ' };
 
-interface DownloadUrl {
-  url: ReturnType<typeof URL.createObjectURL>;
-  filename: string;
-}
-
 export default function App() {
-  // const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
-  // const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
-  // const [microphoneStream, setMicrophoneStream] = useState<MediaStream | null>(null);
-
   const imagePatternRef = useRef<HTMLImageElement>(null);
   const canvasPatternRef: React.MutableRefObject<CanvasPattern | null> = useRef(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -31,7 +23,7 @@ export default function App() {
   const [microphoneAccess, setMicrophoneAccess] = useState<MediaAccess>(MediaAccess.Inactive);
 
   const [recorder, setRecorder] = useState<MediaRecorderWrapper | null>(null);
-  const [downloadHref, setDownloadHref] = useState<DownloadUrl | null>(null);
+  const [downloads, setDownloads] = useState<DownloadUrl[]>([]);
 
   const composeFrames = useCallback(
     function composeFramesCb() {
@@ -154,20 +146,20 @@ export default function App() {
       if (recorder) {
         console.log('Stopping recording');
         recorder.stop().then((blob) => {
-          setDownloadHref((prevDownloadUrl) => {
-            if (prevDownloadUrl) {
-              URL.revokeObjectURL(prevDownloadUrl.url);
-            }
-
-            return {
+          setDownloads(downloads => {
+            const timestamp = new Date();
+            return [
+            {
               url: URL.createObjectURL(blob),
-              filename: `${new Date().toISOString()}.webm`,
-            };
-          });
+              filename: `${timestamp.toISOString()}.webm`,
+              timestamp,
+            },
+              ...downloads,
+            ];
+          })
         });
         setRecorder(null);
       } else {
-        setDownloadHref(null);
         const tracks: MediaStreamTrack[] = [];
 
         const microphoneAudio = microphoneAudioRef.current;
@@ -185,7 +177,7 @@ export default function App() {
         }
       }
     },
-    [recorder, setRecorder, microphoneAccess, microphoneAudioRef, canvasRef, setDownloadHref]
+    [recorder, microphoneAccess,]
   );
 
   const requestScreenAccess = useCallback(
@@ -206,7 +198,7 @@ export default function App() {
             }
           })
           .catch((error) => {
-            console.warn(error);
+            console.warn('Error accessing screen stream', error);
             setScreenAccess(MediaAccess.Error);
           });
       } else if (access === MediaAccess.Inactive) {
@@ -219,7 +211,7 @@ export default function App() {
         }
       }
     },
-    [setScreenAccess]
+    []
   );
 
   const requestCameraAccess = useCallback(
@@ -240,7 +232,7 @@ export default function App() {
             }
           })
           .catch((error) => {
-            console.warn(error);
+            console.warn('Error accessing camera stream', error);
             setCameraAccess(MediaAccess.Error);
           });
       } else if (MediaAccess.Inactive) {
@@ -253,7 +245,7 @@ export default function App() {
         }
       }
     },
-    [cameraVideoRef, setCameraAccess]
+    []
   );
 
   const requestMicrophoneAccess = useCallback(
@@ -288,7 +280,7 @@ export default function App() {
             }
           })
           .catch((error) => {
-            console.warn('Error requestion microphone audio', error);
+            console.warn('Error accessing microphone audio', error);
             setMicrophoneAccess(MediaAccess.Error);
           });
       } else if (access === MediaAccess.Inactive) {
@@ -305,7 +297,7 @@ export default function App() {
         setMicrophoneAccess(MediaAccess.Inactive);
       }
     },
-    [microphoneAudioRef, setMicrophoneAccess, recorder]
+    [recorder]
   );
 
   return (
@@ -314,15 +306,18 @@ export default function App() {
         <h1>Weft</h1>
       </header>
 
-      <ul className="downloads">
-        {!!downloadHref && (
-          <li>
-            <a href={downloadHref.url} download={downloadHref.filename}>
-              Download video
-            </a>
-          </li>
-        )}
-      </ul>
+      <DownloadsListManager items={downloads} onEditItems={(newItemList) => {
+        setDownloads(oldItemList => {
+          // We need to revoke in-memory blob URLs that might have been deleted
+          const pickUrl = (item: DownloadUrl) => item.url;
+
+          const oldUrls = new Set(oldItemList.map(pickUrl));
+          Array.from(new Set(newItemList.map(pickUrl).filter(url => !oldUrls.has(url))))
+            .forEach(URL.revokeObjectURL);
+
+          return newItemList;
+        });
+      }} />
 
       <canvas
         ref={canvasRef}

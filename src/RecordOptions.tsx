@@ -59,7 +59,7 @@ export default function RecordOptions({
   const [expanded, setExpanded] = useState<boolean>(false);
   const optionsClicked = useCallback(() => {
     setExpanded(negate);
-  }, [setExpanded]);
+  }, []);
 
   const selectQuality = useCallback(
     function changeQualityCb(event: React.ChangeEvent<HTMLSelectElement>): void {
@@ -79,111 +79,111 @@ export default function RecordOptions({
   );
 
   return (
-    <div className={`recording-actions ${expanded ? 'expanded' : ''}`}>
-      <div className="toolbar">
-        <button className="recording" onClick={toggleRecording}>
-          {recording ? <CameraReelsIcon /> : <CameraReelsFillIcon />}
-          {recording ? 'Stop recording' : 'Start recording'}
-        </button>
+    <div className="recording-actions">
+      <button className="recording" onClick={toggleRecording}>
+        {recording ? <CameraReelsIcon /> : <CameraReelsFillIcon />}
+        {recording ? 'Stop recording' : 'Start recording'}
+      </button>
+      <div className={`recording-options-container ${expanded ? 'expanded' : ''}`}>
         <button className="recording-options" title="Recording options" onClick={optionsClicked}>
           {expanded ? <GearIcon /> : <GearFillIcon />}
           Options
         </button>
-        <FullscreenToggle />
+        <ul className="recording-options-menu">
+          <li>
+            <label>
+              Quality
+              <select name="quality" value={quality} onChange={selectQuality}>
+                <option value="720p">720p</option>
+                <option value="1080p">1080p</option>
+              </select>
+            </label>
+          </li>
+          {!!screenAccess && (
+            <li>
+              <label>
+                <WindowIcon />
+                <input
+                  type="checkbox"
+                  name="include-screen"
+                  className="include-screen"
+                  checked={screenAccess === MediaAccess.Active}
+                  disabled={
+                    !requestScreenAccess ||
+                    screenAccess === MediaAccess.Denied ||
+                    screenAccess === MediaAccess.Error
+                  }
+                  onChange={
+                    requestScreenAccess &&
+                    ((event) => {
+                      const access = event.currentTarget.checked
+                        ? MediaAccess.Active
+                        : MediaAccess.Inactive;
+                      requestScreenAccess(access);
+                    })
+                  }
+                />
+                Include screen
+              </label>
+            </li>
+          )}
+          {!!cameraAccess && (
+            <li>
+              <label>
+                <CameraVideoIcon />
+                <input
+                  type="checkbox"
+                  name="include-camera"
+                  className="include-camera"
+                  checked={cameraAccess === MediaAccess.Active}
+                  disabled={
+                    !requestCameraAccess ||
+                    cameraAccess === MediaAccess.Denied ||
+                    cameraAccess === MediaAccess.Error
+                  }
+                  onChange={
+                    requestCameraAccess &&
+                    ((event) => {
+                      const access = event.currentTarget.checked
+                        ? MediaAccess.Active
+                        : MediaAccess.Inactive;
+                      requestCameraAccess(access);
+                    })
+                  }
+                />
+                Include camera
+              </label>
+            </li>
+          )}
+          <li>
+            <label>
+              <MicIcon />
+              <input
+                type="checkbox"
+                name="include-microphone"
+                className="include-microphone"
+                checked={microphoneAccess === MediaAccess.Active}
+                disabled={
+                  !requestMicrophoneAccess ||
+                  microphoneAccess === MediaAccess.Denied ||
+                  microphoneAccess === MediaAccess.Error
+                }
+                onChange={
+                  requestMicrophoneAccess &&
+                  ((event) => {
+                    const access = event.currentTarget.checked
+                      ? MediaAccess.Active
+                      : MediaAccess.Inactive;
+                    requestMicrophoneAccess(access);
+                  })
+                }
+              />
+              Include microphone
+            </label>
+          </li>
+        </ul>
       </div>
-      <ul className="recording-options-menu">
-        <li>
-          <label>
-          Quality
-          <select name="quality" value={quality} onChange={selectQuality}>
-            <option value="720p">720p</option>
-            <option value="1080p">1080p</option>
-          </select>
-          </label>
-        </li>
-        {!!screenAccess && (
-          <li>
-            <label>
-              <WindowIcon />
-              <input
-                type="checkbox"
-                name="include-screen"
-                className="include-screen"
-                checked={screenAccess === MediaAccess.Active}
-                disabled={
-                  !requestScreenAccess ||
-                  screenAccess === MediaAccess.Denied ||
-                  screenAccess === MediaAccess.Error
-                }
-                onChange={
-                  requestScreenAccess &&
-                  ((event) => {
-                    const access = event.currentTarget.checked
-                      ? MediaAccess.Active
-                      : MediaAccess.Inactive;
-                    requestScreenAccess(access);
-                  })
-                }
-              />
-              Include screen
-            </label>
-          </li>
-        )}
-        {!!cameraAccess && (
-          <li>
-            <label>
-              <CameraVideoIcon />
-              <input
-                type="checkbox"
-                name="include-camera"
-                className="include-camera"
-                checked={cameraAccess === MediaAccess.Active}
-                disabled={
-                  !requestCameraAccess ||
-                  cameraAccess === MediaAccess.Denied ||
-                  cameraAccess === MediaAccess.Error
-                }
-                onChange={
-                  requestCameraAccess &&
-                  ((event) => {
-                    const access = event.currentTarget.checked
-                      ? MediaAccess.Active
-                      : MediaAccess.Inactive;
-                    requestCameraAccess(access);
-                  })
-                }
-              />
-              Include camera
-            </label>
-          </li>
-        )}
-        <li>
-          <label>
-            <MicIcon />
-            <input
-              type="checkbox"
-              name="include-microphone"
-              className="include-microphone"
-              checked={microphoneAccess === MediaAccess.Active}
-              disabled={
-                !requestMicrophoneAccess ||
-                microphoneAccess === MediaAccess.Denied ||
-                microphoneAccess === MediaAccess.Error
-              }
-              onChange={
-                requestMicrophoneAccess &&
-                ((event) => {
-                  const access = event.currentTarget.checked
-                    ? MediaAccess.Active
-                    : MediaAccess.Inactive;
-                  requestMicrophoneAccess(access);
-                })
-              }
-            />
-            Include microphone
-          </label>
-        </li>
-      </ul>
+      <FullscreenToggle />
     </div>
   );
 }
