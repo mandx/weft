@@ -8,6 +8,15 @@ export interface DownloadUrl {
   filename: string;
 }
 
+export function createDownloadUrl(blob: Blob): DownloadUrl {
+  const timestamp = new Date();
+  return {
+    url: URL.createObjectURL(blob),
+    filename: `${timestamp.toISOString()}.webm`,
+    timestamp,
+  };
+}
+
 interface DownloadItemProps {
   item: DownloadUrl,
   onEditItem(item: DownloadUrl): void,

@@ -2,8 +2,7 @@ import React, { Fragment, useState, useRef, useEffect, useCallback } from 'react
 
 import './App.css';
 import MediaRecorderWrapper from './media-recorder-wrapper';
-import RecordOptions, { MediaAccess } from './RecordOptions';
-import { Quality, qualityToResolution, DEFAULT_RESOLUTION } from './app-types';
+import RecordOptions, { MediaAccess, Quality, qualityToResolution, DEFAULT_RESOLUTION } from './RecordOptions';
 import DownloadsListManager, { DownloadUrl } from './DownloadsList';
 
 const HIDDEN: React.CSSProperties = { display: 'none ' };
