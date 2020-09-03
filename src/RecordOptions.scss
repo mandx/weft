@@ -83,6 +83,10 @@
   .recording-options-menu {
     position: absolute;
     bottom: 100%;
+    border-radius: 10px;
+    background: black;
+    padding: 1em 1em 0;
+    border: 1px solid silver;
 
     label > select {
       margin-left: 1em;

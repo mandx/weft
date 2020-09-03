@@ -28,7 +28,7 @@ function DownloadItem({ item, onEditItem, onDeleteItem }: DownloadItemProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleDelete = useCallback(
-    function<T>(event: React.MouseEvent<T>): void {
+    function <T>(event: React.MouseEvent<T>): void {
       event.preventDefault();
       onDeleteItem(item);
     },
@@ -36,7 +36,7 @@ function DownloadItem({ item, onEditItem, onDeleteItem }: DownloadItemProps) {
   );
 
   const handleSubmit = useCallback(
-    function<T>(event: React.MouseEvent<T>): void {
+    function <T>(event: React.MouseEvent<T>): void {
       event.preventDefault();
 
       const input = inputRef.current;
@@ -49,11 +49,11 @@ function DownloadItem({ item, onEditItem, onDeleteItem }: DownloadItemProps) {
     [item, editing, onEditItem]
   );
 
-  const startEditing = useCallback(function<T>(_event: React.MouseEvent<T>): void {
+  const startEditing = useCallback(function <T>(_event: React.MouseEvent<T>): void {
     setEditing(true);
   }, []);
 
-  const cancelEditing = useCallback(function<T>(_event: React.MouseEvent<T>): void {
+  const cancelEditing = useCallback(function <T>(_event: React.MouseEvent<T>): void {
     setEditing(false);
   }, []);
 

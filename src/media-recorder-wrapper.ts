@@ -41,16 +41,15 @@ export default class MediaRecorderWrapper {
     return this;
   }
 
-  async stop(): Promise<Blob> {
-    console.log('MediaRecorderWrapper stopped');
-    this.mediaRecorder.stop();
-    // const chunks = this.chunks.splice(0);
-    // return new Blob(chunks, { type: 'video/webm' });
+  async stop(ignoreIfInactive?: boolean): Promise<Blob> {
+    console.log('MediaRecorderWrapper stopping');
+    if (!ignoreIfInactive || this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.stop();
+    }
     return await this.blobPromise;
   }
 
   handleRecorderStop(): void {
-    // this.mediaRecorder.stream.getTracks().forEach(t => t.stop());
     if (this.blobPromiseResolver) {
       this.blobPromiseResolver(new Blob(this.chunks.splice(0), { type: 'video/webm' }));
     }
