@@ -18,64 +18,71 @@ export function createDownloadUrl(blob: Blob): DownloadUrl {
 }
 
 interface DownloadItemProps {
-  item: DownloadUrl,
-  onEditItem(item: DownloadUrl): void,
-  onDeleteItem(item: DownloadUrl): void,
+  item: DownloadUrl;
+  onEditItem(item: DownloadUrl): void;
+  onDeleteItem(item: DownloadUrl): void;
 }
 
 function DownloadItem({ item, onEditItem, onDeleteItem }: DownloadItemProps) {
   const [editing, setEditing] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleDelete = useCallback(event => {
-    console.log('handleDelete');
-    event.preventDefault();
-    onDeleteItem(item);
-  }, [item, onDeleteItem]);
+  const handleDelete = useCallback(
+    function<T>(event: React.MouseEvent<T>): void {
+      event.preventDefault();
+      onDeleteItem(item);
+    },
+    [item, onDeleteItem]
+  );
 
-  const handleSubmit = useCallback((event) => {
-    console.log('handleSubmit');
-    event.preventDefault();
+  const handleSubmit = useCallback(
+    function<T>(event: React.MouseEvent<T>): void {
+      event.preventDefault();
 
-    const input = inputRef.current;
-    if (editing && input) {
-      onEditItem({ ...item, filename: input.value });
-    }
+      const input = inputRef.current;
+      if (editing && input) {
+        onEditItem({ ...item, filename: input.value });
+      }
 
-    setEditing(false);
-  }, [item, editing, onEditItem]);
+      setEditing(false);
+    },
+    [item, editing, onEditItem]
+  );
 
-  const startEditing = useCallback(() => {
-    console.log('startEditing');
+  const startEditing = useCallback(function<T>(_event: React.MouseEvent<T>): void {
     setEditing(true);
   }, []);
 
-  const cancelEditing = useCallback(() => {
-    console.log('startEditing');
+  const cancelEditing = useCallback(function<T>(_event: React.MouseEvent<T>): void {
     setEditing(false);
   }, []);
 
   return (
     <form onSubmit={handleSubmit}>
-      {editing ?
-      <input defaultValue={item.filename} ref={inputRef} />:
-      <a href={item.url} download={item.filename} title={item.timestamp.toLocaleString()}>
-        Download video
-      </a>
-      }
-      {editing ?
+      {editing ? (
+        <input defaultValue={item.filename} ref={inputRef} />
+      ) : (
+        <a href={item.url} download={item.filename} title={item.timestamp.toLocaleString()}>
+          Download video
+        </a>
+      )}
+      {editing ? (
         <Fragment>
-      <button key="button-submit" type="submit">Save</button>
-      <button type="button" onClick={cancelEditing}>
-      Cancel
-      </button>
+          <button key="button-submit" type="submit">
+            Save
+          </button>
+          <button type="button" onClick={cancelEditing}>
+            Cancel
+          </button>
         </Fragment>
-      :
-      <button key="button-button" type="button" onClick={startEditing}>
-        Rename
+      ) : (
+        <button key="button-button" type="button" onClick={startEditing}>
+          Rename
+        </button>
+      )}
+      <button type="button" onClick={handleDelete}>
+        Delete
       </button>
-      }
-      <button type="button" onClick={handleDelete}>Delete</button>
     </form>
   );
 }

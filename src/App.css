@@ -19,6 +19,7 @@
   padding: 0.5em 0.75em;
   text-shadow: 0 0 5px black;
   color: white;
+  z-index: 1;
 }
 
 .main-header .toolbar {
