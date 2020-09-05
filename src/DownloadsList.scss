@@ -10,14 +10,39 @@ ul.downloads {
   top: 1em;
   z-index: 1;
 
-  li form {
-    display: flex;
-  }
-
   a {
     &, :hover, :visited, :active {
-    color: white;
+      color: white;
+    }
 
+    display: flex;
+    align-items: center;
+  }
+
+
+
+  button {
+    display: flex;
+    align-items: center;
+    padding: 0.4em 0.7em 0.4em 0.5em;
+    border: 0 none;
+    border-radius: 5px;
+  }
+
+  a, button {
+    svg {
+      margin-inline-end: 0.5em;
+    }
+  }
+
+  li {
+    form {
+      display: flex;
+      align-items: center;
+
+      button {
+        margin-left: 0.5em;
+      }
     }
   }
 }

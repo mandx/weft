@@ -14,6 +14,10 @@ export default function App() {
   },
   []);
 
+  const playVideo = useCallback(function playVideoCb(item: DownloadUrl): void {
+    console.log('Playing', item);
+  }, []);
+
   const setDownloadList = useCallback(function setDownloadListCb(newList: DownloadUrl[]): void {
     setDownloads((oldList) => {
       // We need to revoke in-memory blob URLs that might have been deleted
@@ -34,7 +38,7 @@ export default function App() {
         <h1>Weft</h1>
       </header>
       <Recorder onNewDownloadUrl={addNewDownloadUrl} />
-      <DownloadsListManager items={downloads} onEditItems={setDownloadList} />
+      <DownloadsListManager items={downloads} onEditItems={setDownloadList} onPlayItem={playVideo} />
     </Fragment>
   );
 }

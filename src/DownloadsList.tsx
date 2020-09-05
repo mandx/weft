@@ -1,11 +1,16 @@
 import React, { Fragment, useState, useRef, useCallback } from 'react';
+import { ReactComponent as DownloadIcon } from 'bootstrap-icons/icons/download.svg';
+import { ReactComponent as PlayIcon } from 'bootstrap-icons/icons/play.svg';
+import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil.svg';
+import { ReactComponent as XCircleIcon } from 'bootstrap-icons/icons/x-circle.svg';
+import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash.svg';
 
 import './DownloadsList.scss';
 
 export interface DownloadUrl {
-  url: ReturnType<typeof URL.createObjectURL>;
-  timestamp: Date;
-  filename: string;
+  url: ReturnType<typeof URL.createObjectURL>,
+  timestamp: Date,
+  filename: string,
 }
 
 export function createDownloadUrl(blob: Blob): DownloadUrl {
@@ -18,12 +23,13 @@ export function createDownloadUrl(blob: Blob): DownloadUrl {
 }
 
 interface DownloadItemProps {
-  item: DownloadUrl;
-  onEditItem(item: DownloadUrl): void;
-  onDeleteItem(item: DownloadUrl): void;
+  item: DownloadUrl,
+  onEditItem(item: DownloadUrl): void,
+  onDeleteItem(item: DownloadUrl): void,
+  onPlayItem(item: DownloadUrl): void,
 }
 
-function DownloadItem({ item, onEditItem, onDeleteItem }: DownloadItemProps) {
+function DownloadItem({ item, onEditItem, onDeleteItem, onPlayItem }: DownloadItemProps) {
   const [editing, setEditing] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -57,42 +63,52 @@ function DownloadItem({ item, onEditItem, onDeleteItem }: DownloadItemProps) {
     setEditing(false);
   }, []);
 
+  const handlePlay = useCallback(function <T>(_event: React.MouseEvent<T>): void {
+    onPlayItem(item);
+  }, [item, onPlayItem]);
+
   return (
     <form onSubmit={handleSubmit}>
       {editing ? (
         <input defaultValue={item.filename} ref={inputRef} />
       ) : (
         <a href={item.url} download={item.filename} title={item.timestamp.toLocaleString()}>
-          Download video
+          <DownloadIcon/> Download video
         </a>
       )}
       {editing ? (
         <Fragment>
-          <button key="button-submit" type="submit">
-            Save
+          <button type="submit">
+            <PencilIcon /> Save
           </button>
           <button type="button" onClick={cancelEditing}>
-            Cancel
+            <XCircleIcon /> Cancel
           </button>
         </Fragment>
       ) : (
-        <button key="button-button" type="button" onClick={startEditing}>
-          Rename
-        </button>
+        <Fragment>
+          <button type="button" onClick={handlePlay}>
+            <PlayIcon /> Play
+          </button>
+          <button type="button" onClick={startEditing}>
+            <PencilIcon /> Rename
+          </button>
+        </Fragment>
       )}
       <button type="button" onClick={handleDelete}>
-        Delete
+        <TrashIcon /> Delete
       </button>
     </form>
   );
 }
 
 export interface DownloadsListManagerProps {
-  items: DownloadUrl[];
-  onEditItems(items: DownloadUrl[]): void;
+  items: DownloadUrl[],
+  onEditItems(items: DownloadUrl[]): void,
+  onPlayItem: DownloadItemProps['onPlayItem'],
 }
 
-export default function DownloadsListManager({ items, onEditItems }: DownloadsListManagerProps) {
+export default function DownloadsListManager({ items, onEditItems, onPlayItem }: DownloadsListManagerProps) {
   if (!items.length) {
     return null;
   }
@@ -113,6 +129,7 @@ export default function DownloadsListManager({ items, onEditItems }: DownloadsLi
               newItems.splice(index, 1);
               onEditItems(newItems);
             }}
+            onPlayItem={onPlayItem}
           />
         </li>
       ))}
