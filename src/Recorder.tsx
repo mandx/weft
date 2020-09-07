@@ -111,12 +111,27 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
             cameraVideo.srcObject instanceof MediaStream &&
             cameraVideo.srcObject.active
           ) {
+            context.save()
+
             let cameraVideoWidth = cameraVideo.videoWidth;
             let cameraVideoHeight = cameraVideo.videoHeight;
             const cameraVideoAspectRatio = cameraVideoWidth / cameraVideoHeight;
 
             cameraVideoHeight = canvasHeight / 6;
             cameraVideoWidth = cameraVideoHeight * cameraVideoAspectRatio;
+
+            context.beginPath();
+            context.arc(
+              canvasWidth - cameraVideoWidth - 10 + (cameraVideoWidth / 2),
+              canvasHeight - cameraVideoHeight - 10 + (cameraVideoHeight / 2),
+              Math.min(
+                cameraVideoWidth,
+                cameraVideoHeight,
+              ) / 2,
+              0,
+              2 * Math.PI
+            );
+            context.clip();
 
             context.drawImage(
               cameraVideo,
@@ -125,6 +140,8 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
               cameraVideoWidth,
               cameraVideoHeight
             );
+
+            context.restore()
           }
 
           // const text = JSON.stringify(
@@ -173,7 +190,7 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
 
         const canvas = canvasRef.current;
         if (canvas) {
-          tracks.push(...canvas.captureStream(30).getTracks());
+          tracks.push(...canvas.captureStream(25).getTracks());
         }
 
         if (tracks.length) {
