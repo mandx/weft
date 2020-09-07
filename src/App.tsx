@@ -1,11 +1,12 @@
 import React, { Fragment, useState, useCallback } from 'react';
 
-import './App.css';
+import './App.scss';
 import Recorder from './Recorder';
 import DownloadsListManager, { DownloadUrl } from './DownloadsList';
 
 export default function App() {
   const [downloads, setDownloads] = useState<DownloadUrl[]>([]);
+  const [playingUrl, setPlayingUrl] = useState<DownloadUrl | null>(null);
 
   const addNewDownloadUrl = useCallback(function addNewDownloadUrlCb(
     downloadUrl: DownloadUrl
@@ -13,10 +14,6 @@ export default function App() {
     setDownloads((downloads) => [downloadUrl, ...downloads]);
   },
   []);
-
-  const playVideo = useCallback(function playVideoCb(item: DownloadUrl): void {
-    console.log('Playing', item);
-  }, []);
 
   const setDownloadList = useCallback(function setDownloadListCb(newList: DownloadUrl[]): void {
     setDownloads((oldList) => {
@@ -32,13 +29,41 @@ export default function App() {
     });
   }, []);
 
+  const playVideo = useCallback(function playVideoCb<T>(
+    item: DownloadUrl,
+    event: React.MouseEvent<T>
+  ): void {
+    if (event.ctrlKey) {
+      window.open(item.url, '_blank');
+    } else {
+      setPlayingUrl(item);
+    }
+  },
+  []);
+
+  const closeVideoPlayer = useCallback(function closeVideoPlayerCb() {
+    setPlayingUrl(null);
+  }, []);
+
   return (
     <Fragment>
-      <header className="main-header">
-        <h1>Weft</h1>
-      </header>
+      <nav className="main-nav">
+        <header className="main-header">
+          <h1>Weft</h1>
+        </header>
+        <DownloadsListManager
+          items={downloads}
+          onEditItems={setDownloadList}
+          onPlayItem={playVideo}
+        />
+      </nav>
       <Recorder onNewDownloadUrl={addNewDownloadUrl} />
-      <DownloadsListManager items={downloads} onEditItems={setDownloadList} onPlayItem={playVideo} />
+      <dialog open={!!playingUrl} className="video-playback">
+        <button type="button" onClick={closeVideoPlayer}>
+          Close player
+        </button>
+        <video src={playingUrl ? playingUrl.url : undefined} controls />
+      </dialog>
     </Fragment>
   );
 }

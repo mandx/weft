@@ -8,9 +8,9 @@ import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash.svg';
 import './DownloadsList.scss';
 
 export interface DownloadUrl {
-  url: ReturnType<typeof URL.createObjectURL>,
-  timestamp: Date,
-  filename: string,
+  url: ReturnType<typeof URL.createObjectURL>;
+  timestamp: Date;
+  filename: string;
 }
 
 export function createDownloadUrl(blob: Blob): DownloadUrl {
@@ -23,10 +23,10 @@ export function createDownloadUrl(blob: Blob): DownloadUrl {
 }
 
 interface DownloadItemProps {
-  item: DownloadUrl,
-  onEditItem(item: DownloadUrl): void,
-  onDeleteItem(item: DownloadUrl): void,
-  onPlayItem(item: DownloadUrl): void,
+  item: DownloadUrl;
+  onEditItem(item: DownloadUrl): void;
+  onDeleteItem<T>(item: DownloadUrl, event: React.MouseEvent<T>): void;
+  onPlayItem<T>(item: DownloadUrl, event: React.MouseEvent<T>): void;
 }
 
 function DownloadItem({ item, onEditItem, onDeleteItem, onPlayItem }: DownloadItemProps) {
@@ -35,8 +35,7 @@ function DownloadItem({ item, onEditItem, onDeleteItem, onPlayItem }: DownloadIt
 
   const handleDelete = useCallback(
     function <T>(event: React.MouseEvent<T>): void {
-      event.preventDefault();
-      onDeleteItem(item);
+      onDeleteItem(item, event);
     },
     [item, onDeleteItem]
   );
@@ -63,9 +62,12 @@ function DownloadItem({ item, onEditItem, onDeleteItem, onPlayItem }: DownloadIt
     setEditing(false);
   }, []);
 
-  const handlePlay = useCallback(function <T>(_event: React.MouseEvent<T>): void {
-    onPlayItem(item);
-  }, [item, onPlayItem]);
+  const handlePlay = useCallback(
+    function <T>(event: React.MouseEvent<T>): void {
+      onPlayItem(item, event);
+    },
+    [item, onPlayItem]
+  );
 
   return (
     <form onSubmit={handleSubmit}>
@@ -73,7 +75,7 @@ function DownloadItem({ item, onEditItem, onDeleteItem, onPlayItem }: DownloadIt
         <input defaultValue={item.filename} ref={inputRef} />
       ) : (
         <a href={item.url} download={item.filename} title={item.timestamp.toLocaleString()}>
-          <DownloadIcon/> Download video
+          <DownloadIcon /> Download video
         </a>
       )}
       {editing ? (
@@ -103,12 +105,16 @@ function DownloadItem({ item, onEditItem, onDeleteItem, onPlayItem }: DownloadIt
 }
 
 export interface DownloadsListManagerProps {
-  items: DownloadUrl[],
-  onEditItems(items: DownloadUrl[]): void,
-  onPlayItem: DownloadItemProps['onPlayItem'],
+  items: DownloadUrl[];
+  onEditItems(items: DownloadUrl[]): void;
+  onPlayItem: DownloadItemProps['onPlayItem'];
 }
 
-export default function DownloadsListManager({ items, onEditItems, onPlayItem }: DownloadsListManagerProps) {
+export default function DownloadsListManager({
+  items,
+  onEditItems,
+  onPlayItem,
+}: DownloadsListManagerProps) {
   if (!items.length) {
     return null;
   }

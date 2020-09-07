@@ -11,15 +11,16 @@ ul.downloads {
   z-index: 1;
 
   a {
-    &, :hover, :visited, :active {
+    &,
+    :hover,
+    :visited,
+    :active {
       color: white;
     }
 
     display: flex;
     align-items: center;
   }
-
-
 
   button {
     display: flex;
@@ -29,13 +30,20 @@ ul.downloads {
     border-radius: 5px;
   }
 
-  a, button {
+  a,
+  button {
     svg {
       margin-inline-end: 0.5em;
     }
   }
 
   li {
+    margin-bottom: 0.5em;
+
+    :last-of-type {
+      margin-bottom: 0;
+    }
+
     form {
       display: flex;
       align-items: center;

@@ -191,21 +191,18 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
     }
   }, []);
 
-  const deinitializeMicrophoneStream = useCallback(
-    function deinitializeMicrophoneStreamCb() {
-      // TODO: Safely save a reference to the microphone media stream;
-      //       so we can remove and stop the exact tracks added when we
-      //       obtained a microphone audio stream. Right now, we just remove
-      //       all audio tracks, since the only audio we request comes from
-      //       the system's microphone.
-      const recorderStream = recorderRef.current?.stream;
-      recorderStream?.getAudioTracks().forEach((track) => {
-        recorderStream.removeTrack(track);
-        track.stop();
-      });
-    },
-    []
-  );
+  const deinitializeMicrophoneStream = useCallback(function deinitializeMicrophoneStreamCb() {
+    // TODO: Safely save a reference to the microphone media stream;
+    //       so we can remove and stop the exact tracks added when we
+    //       obtained a microphone audio stream. Right now, we just remove
+    //       all audio tracks, since the only audio we request comes from
+    //       the system's microphone.
+    const recorderStream = recorderRef.current?.stream;
+    recorderStream?.getAudioTracks().forEach((track) => {
+      recorderStream.removeTrack(track);
+      track.stop();
+    });
+  }, []);
 
   const requestScreenAccess = useCallback(
     function requestScreenAccessCb(access: MediaAccess): void {
@@ -311,15 +308,13 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
   );
 
   useEffect(() => {
-      return function () {
-        recorderRef.current?.stop(true);
-        deinitializeScreenStream();
-        deinitializeCameraStream();
-        deinitializeMicrophoneStream();
-      };
-    },
-    [deinitializeScreenStream, deinitializeCameraStream, deinitializeMicrophoneStream]
-  );
+    return function () {
+      recorderRef.current?.stop(true);
+      deinitializeScreenStream();
+      deinitializeCameraStream();
+      deinitializeMicrophoneStream();
+    };
+  }, [deinitializeScreenStream, deinitializeCameraStream, deinitializeMicrophoneStream]);
 
   return (
     <div className="recorder">
