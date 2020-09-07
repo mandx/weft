@@ -33,8 +33,18 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
 
   const [resolutionWidth, resolutionHeight] = qualityToResolution(quality, DEFAULT_RESOLUTION);
 
+  // requestAnimationFrame loop state
+  const frameRequestId: React.MutableRefObject<number> = useRef(0);
+  const frameRequestContinue: React.MutableRefObject<boolean> = useRef(true);
+
   const composeFrames = useCallback(
-    function composeFramesCb() {
+    function composeFramesCb(/* timestamp: number */) {
+
+      cancelAnimationFrame(frameRequestId.current);
+      if (frameRequestContinue.current) {
+        frameRequestId.current = requestAnimationFrame(composeFrames);
+      }
+
       const canvas = canvasRef.current;
       if (canvas) {
         const context = canvas.getContext('2d');
@@ -132,14 +142,16 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
           // }
         }
       }
-
-      // setTimeout(composeFrames);
-      requestAnimationFrame(composeFrames);
     },
     [canvasRef, canvasPatternRef, screenVideoRef, cameraVideoRef]
   );
 
-  useEffect(composeFrames, [composeFrames]);
+  useEffect(() => {
+    composeFrames();
+    return () => {
+      frameRequestContinue.current = false;
+    }
+  }, [composeFrames]);
 
   const toggleRecording = useCallback(
     function toggleRecordingCb() {
