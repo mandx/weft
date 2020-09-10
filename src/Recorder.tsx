@@ -62,7 +62,6 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
         const context = canvas.getContext('2d');
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
-        const canvasAspectRatio = canvasWidth / canvasHeight;
 
         if (context) {
           if (!canvasPatternRef.current) {
@@ -91,29 +90,25 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
             screenVideo.srcObject instanceof MediaStream &&
             screenVideo.srcObject.active
           ) {
-            let screenVideoWidth = screenVideo.videoWidth || 640;
-            let screenVideoHeight = screenVideo.videoHeight || 480;
-            const screenVideoAspectRatio = screenVideoWidth / screenVideoHeight;
-
-            let screenVideoX = 0;
-            let screenVideoY = 0;
-
-            if (canvasAspectRatio > screenVideoAspectRatio) {
-              screenVideoHeight = canvasHeight;
-              screenVideoWidth = canvasHeight * screenVideoAspectRatio;
-              screenVideoX = (canvasWidth - screenVideoWidth) / 2;
-            } else {
-              screenVideoWidth = canvasWidth;
-              screenVideoHeight = screenVideoWidth / screenVideoAspectRatio;
-              screenVideoY = (canvasHeight - screenVideoHeight) / 2;
-            }
+            const screenVideoWidth = screenVideo.videoWidth || 640;
+            const screenVideoHeight = screenVideo.videoHeight || 480;
+            const ratio = Math.min(
+              canvasWidth / screenVideoWidth,
+              canvasHeight / screenVideoHeight
+            );
+            const screenVideoX = (canvasWidth - screenVideoWidth * ratio) / 2;
+            const screenVideoY = (canvasHeight - screenVideoHeight * ratio) / 2;
 
             context.drawImage(
               screenVideo,
+              0,
+              0,
+              screenVideoWidth,
+              screenVideoHeight,
               screenVideoX,
               screenVideoY,
-              screenVideoWidth,
-              screenVideoHeight
+              screenVideoWidth * ratio,
+              screenVideoHeight * ratio
             );
           }
 
@@ -123,7 +118,7 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
             cameraVideo.srcObject instanceof MediaStream &&
             cameraVideo.srcObject.active
           ) {
-            context.save()
+            context.save();
 
             let cameraVideoWidth = cameraVideo.videoWidth;
             let cameraVideoHeight = cameraVideo.videoHeight;
@@ -134,12 +129,9 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
 
             context.beginPath();
             context.arc(
-              canvasWidth - cameraVideoWidth - 10 + (cameraVideoWidth / 2),
-              canvasHeight - cameraVideoHeight - 10 + (cameraVideoHeight / 2),
-              Math.min(
-                cameraVideoWidth,
-                cameraVideoHeight,
-              ) / 2,
+              canvasWidth - cameraVideoWidth - 10 + cameraVideoWidth / 2,
+              canvasHeight - cameraVideoHeight - 10 + cameraVideoHeight / 2,
+              Math.min(cameraVideoWidth, cameraVideoHeight) / 2,
               0,
               2 * Math.PI
             );
@@ -179,7 +171,7 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
     composeFrames();
     return () => {
       frameRequestContinue.current = false;
-    }
+    };
   }, [composeFrames]);
 
   const toggleRecording = useCallback(
