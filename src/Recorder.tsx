@@ -141,7 +141,7 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
               cameraVideoHeight
             );
 
-            context.restore()
+            context.restore();
           }
 
           // const text = JSON.stringify(
