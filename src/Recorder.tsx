@@ -36,14 +36,26 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
   // requestAnimationFrame loop state
   const frameRequestId: React.MutableRefObject<number> = useRef(0);
   const frameRequestContinue: React.MutableRefObject<boolean> = useRef(true);
+  const lastFrameTimestamp: React.MutableRefObject<ReturnType<typeof performance.now>> = useRef(performance.now());
+
+  const framesPerSecond = 30;
+  const frameInterval: React.MutableRefObject<number> = useRef(1000 / framesPerSecond);
 
   const composeFrames = useCallback(
     function composeFramesCb(/* timestamp: number */) {
-
       cancelAnimationFrame(frameRequestId.current);
       if (frameRequestContinue.current) {
         frameRequestId.current = requestAnimationFrame(composeFrames);
       }
+
+      const timestamp = performance.now();
+      const lastTimestamp = lastFrameTimestamp.current;
+      const elapsed = timestamp - lastTimestamp
+      if (elapsed < frameInterval.current - 0.1) {
+        return;
+      }
+
+      lastFrameTimestamp.current = timestamp;
 
       const canvas = canvasRef.current;
       if (canvas) {
