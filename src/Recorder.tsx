@@ -255,8 +255,10 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
             }
           })
           .catch((error) => {
-            console.warn('Error accessing screen stream', error);
-            setScreenAccess(MediaAccess.Error);
+            console.warn('Error accessing screen stream:', `${error.message} (${error.name})`);
+            setScreenAccess(
+              error.name !== 'NotAllowedError' ? MediaAccess.Error : MediaAccess.Inactive
+            );
           });
       } else if (access === MediaAccess.Inactive) {
         deinitializeScreenStream();
@@ -284,8 +286,10 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
             }
           })
           .catch((error) => {
-            console.warn('Error accessing camera stream', error);
-            setCameraAccess(MediaAccess.Error);
+            console.warn('Error accessing camera stream:', `${error.message} (${error.name})`);
+            setCameraAccess(
+              error.name === 'NotAllowedError' ? MediaAccess.Inactive : MediaAccess.Error
+            );
           });
       } else if (MediaAccess.Inactive) {
         deinitializeCameraStream();
@@ -329,8 +333,10 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
             }
           })
           .catch((error) => {
-            console.warn('Error accessing microphone audio', error);
-            setMicrophoneAccess(MediaAccess.Error);
+            console.warn('Error accessing microphone stream:', `${error.message} (${error.name})`);
+            setMicrophoneAccess(
+              error.name === 'NotAllowedError' ? MediaAccess.Inactive : MediaAccess.Error
+            );
           });
       } else if (access === MediaAccess.Inactive) {
         deinitializeMicrophoneStream();
