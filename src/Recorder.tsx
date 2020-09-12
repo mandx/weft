@@ -1,4 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, {
+  MutableRefObject,
+  ReactNode,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from 'react';
 
 import './Recorder.scss';
 import MediaRecorderWrapper from './media-recorder-wrapper';
@@ -9,21 +16,26 @@ import RecordOptions, {
   DEFAULT_RESOLUTION,
 } from './RecordOptions';
 import { DownloadUrl, createDownloadUrl } from './DownloadsList';
+import { NotificationLevel } from './Notifications';
 
 const HIDDEN: React.CSSProperties = { display: 'none ' };
 
 interface RecorderProps {
   onNewDownloadUrl(downloadUrl: DownloadUrl): void;
+  emitNotification(content: ReactNode, level: NotificationLevel): void;
 }
 
-export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
+const FRAMES_PER_SECOND = 30;
+const FRAME_INTERVAL = 1000 / FRAMES_PER_SECOND;
+
+export default function Recorder({ onNewDownloadUrl, emitNotification }: RecorderProps) {
   const imagePatternRef = useRef<HTMLImageElement>(null);
-  const canvasPatternRef: React.MutableRefObject<CanvasPattern | null> = useRef(null);
+  const canvasPatternRef: MutableRefObject<CanvasPattern | null> = useRef(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const microphoneAudioRef = useRef<HTMLAudioElement>(null);
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
   const screenVideoRef = useRef<HTMLVideoElement>(null);
-  const recorderRef: React.MutableRefObject<MediaRecorderWrapper | null> = useRef(null);
+  const recorderRef: MutableRefObject<MediaRecorderWrapper | null> = useRef(null);
 
   const [quality, setQuality] = useState<Quality>('720p');
   const [screenAccess, setScreenAccess] = useState<MediaAccess>('INACTIVE');
@@ -34,12 +46,15 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
   const [resolutionWidth, resolutionHeight] = qualityToResolution(quality, DEFAULT_RESOLUTION);
 
   // requestAnimationFrame loop state
-  const frameRequestId: React.MutableRefObject<number> = useRef(0);
-  const frameRequestContinue: React.MutableRefObject<boolean> = useRef(true);
-  const lastFrameTimestamp: React.MutableRefObject<ReturnType<typeof performance.now>> = useRef(performance.now());
+  const frameRequestId: MutableRefObject<number> = useRef(0);
+  const frameRequestContinue: MutableRefObject<boolean> = useRef(true);
+  const lastFrameTimestamp: MutableRefObject<ReturnType<typeof performance.now>> = useRef(
+    performance.now()
+  );
 
-  const framesPerSecond = 30;
-  const frameInterval: React.MutableRefObject<number> = useRef(1000 / framesPerSecond);
+  // TODO: Allow choosing framerate
+  // const framesPerSecond = 30;
+  // const frameInterval: MutableRefObject<number> = useRef(1000 / framesPerSecond);
 
   const composeFrames = useCallback(
     function composeFramesCb(/* timestamp: number */) {
@@ -50,8 +65,8 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
 
       const timestamp = performance.now();
       const lastTimestamp = lastFrameTimestamp.current;
-      const elapsed = timestamp - lastTimestamp
-      if (elapsed < frameInterval.current - 0.1) {
+      const elapsed = timestamp - lastTimestamp;
+      if (elapsed < FRAME_INTERVAL - 0.1) {
         return;
       }
 
@@ -71,16 +86,10 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
               if (pattern) {
                 canvasPatternRef.current = pattern;
               }
-            } else {
-              context.fillStyle = 'green';
             }
           }
 
-          if (canvasPatternRef.current) {
-            context.fillStyle = canvasPatternRef.current;
-          } else {
-            context.fillStyle = 'green';
-          }
+          context.fillStyle = canvasPatternRef.current || 'black';
 
           context.fillRect(0, 0, canvasWidth, canvasHeight);
 
@@ -194,7 +203,7 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
 
         const canvas = canvasRef.current;
         if (canvas) {
-          tracks.push(...canvas.captureStream(25).getTracks());
+          tracks.push(...canvas.captureStream(FRAMES_PER_SECOND).getTracks());
         }
 
         if (tracks.length) {
@@ -258,14 +267,18 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
             console.warn('Error accessing screen stream:', `${error.message} (${error.name})`);
             setScreenAccess(error.name !== 'NotAllowedError' ? 'ERROR' : 'INACTIVE');
 
-
+            if (error.name === 'NotAllowedError') {
+              emitNotification(`Screen access cancelled`, 'info');
+            } else {
+              emitNotification(`Error accessing screen: ${error.message} (${error.name})`, 'error');
+            }
           });
       } else if (access === 'INACTIVE') {
         deinitializeScreenStream();
         setScreenAccess('INACTIVE');
       }
     },
-    [deinitializeScreenStream]
+    [deinitializeScreenStream, emitNotification]
   );
 
   const requestCameraAccess = useCallback(

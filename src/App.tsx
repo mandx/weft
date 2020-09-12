@@ -1,10 +1,13 @@
-import React, { Fragment, useState, useCallback } from 'react';
+import React, { Fragment, useEffect, useRef, useState, useCallback } from 'react';
 
 import './App.scss';
 import Recorder from './Recorder';
 import DownloadsListManager, { DownloadUrl } from './DownloadsList';
+import Notifications, { NotificationsEmitter, createNotificationsEmitter } from './Notifications';
 
 export default function App() {
+  const notificationsEmitterRef = useRef<NotificationsEmitter>(createNotificationsEmitter());
+
   const [downloads, setDownloads] = useState<DownloadUrl[]>([]);
   const [playingUrl, setPlayingUrl] = useState<DownloadUrl | null>(null);
 
@@ -57,13 +60,19 @@ export default function App() {
           onPlayItem={playVideo}
         />
       </nav>
-      <Recorder onNewDownloadUrl={addNewDownloadUrl} />
-      <dialog open={!!playingUrl} className="video-playback">
-        <button type="button" onClick={closeVideoPlayer}>
-          Close player
-        </button>
-        <video src={playingUrl ? playingUrl.url : undefined} controls />
-      </dialog>
+      <Recorder
+        onNewDownloadUrl={addNewDownloadUrl}
+        emitNotification={notificationsEmitterRef.current.emit}
+      />
+      {!!playingUrl && (
+        <dialog open className="video-playback">
+          <button type="button" onClick={closeVideoPlayer}>
+            Close player
+          </button>
+          <video src={playingUrl ? playingUrl.url : undefined} controls />
+        </dialog>
+      )}
+      <Notifications emitter={notificationsEmitterRef.current} />
     </Fragment>
   );
 }
