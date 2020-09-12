@@ -26,9 +26,9 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
   const recorderRef: React.MutableRefObject<MediaRecorderWrapper | null> = useRef(null);
 
   const [quality, setQuality] = useState<Quality>('720p');
-  const [screenAccess, setScreenAccess] = useState<MediaAccess>(MediaAccess.Inactive);
-  const [cameraAccess, setCameraAccess] = useState<MediaAccess>(MediaAccess.Inactive);
-  const [microphoneAccess, setMicrophoneAccess] = useState<MediaAccess>(MediaAccess.Inactive);
+  const [screenAccess, setScreenAccess] = useState<MediaAccess>('INACTIVE');
+  const [cameraAccess, setCameraAccess] = useState<MediaAccess>('INACTIVE');
+  const [microphoneAccess, setMicrophoneAccess] = useState<MediaAccess>('INACTIVE');
   const [recording, setRecording] = useState<boolean>(false);
 
   const [resolutionWidth, resolutionHeight] = qualityToResolution(quality, DEFAULT_RESOLUTION);
@@ -188,7 +188,7 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
         const tracks: MediaStreamTrack[] = [];
 
         const microphoneAudio = microphoneAudioRef.current;
-        if (microphoneAccess === MediaAccess.Active && microphoneAudio) {
+        if (microphoneAccess === 'ACTIVE' && microphoneAudio) {
           tracks.push(...microphoneAudio.captureStream().getTracks());
         }
 
@@ -239,13 +239,13 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
 
   const requestScreenAccess = useCallback(
     function requestScreenAccessCb(access: MediaAccess): void {
-      if (access === MediaAccess.Active) {
+      if (access === 'ACTIVE') {
         navigator.mediaDevices
           .getDisplayMedia({ video: true, audio: false })
           .then((stream) => {
-            setScreenAccess(MediaAccess.Active);
+            setScreenAccess('ACTIVE');
             stream.addEventListener('inactive', function screenStreamEnded() {
-              setScreenAccess(MediaAccess.Inactive);
+              setScreenAccess('INACTIVE');
             });
 
             const videoEl = screenVideoRef.current;
@@ -256,13 +256,13 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
           })
           .catch((error) => {
             console.warn('Error accessing screen stream:', `${error.message} (${error.name})`);
-            setScreenAccess(
-              error.name !== 'NotAllowedError' ? MediaAccess.Error : MediaAccess.Inactive
-            );
+            setScreenAccess(error.name !== 'NotAllowedError' ? 'ERROR' : 'INACTIVE');
+
+
           });
-      } else if (access === MediaAccess.Inactive) {
+      } else if (access === 'INACTIVE') {
         deinitializeScreenStream();
-        setScreenAccess(MediaAccess.Inactive);
+        setScreenAccess('INACTIVE');
       }
     },
     [deinitializeScreenStream]
@@ -270,13 +270,13 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
 
   const requestCameraAccess = useCallback(
     function requestCameraAccessCb(access: MediaAccess): void {
-      if (access === MediaAccess.Active) {
+      if (access === 'ACTIVE') {
         navigator.mediaDevices
           .getUserMedia({ video: true, audio: false })
           .then((stream) => {
-            setCameraAccess(MediaAccess.Active);
+            setCameraAccess('ACTIVE');
             stream.addEventListener('inactive', function cameraStreamEnded() {
-              setCameraAccess(MediaAccess.Inactive);
+              setCameraAccess('INACTIVE');
             });
 
             const videoEl = cameraVideoRef.current;
@@ -287,13 +287,11 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
           })
           .catch((error) => {
             console.warn('Error accessing camera stream:', `${error.message} (${error.name})`);
-            setCameraAccess(
-              error.name === 'NotAllowedError' ? MediaAccess.Inactive : MediaAccess.Error
-            );
+            setCameraAccess(error.name === 'NotAllowedError' ? 'INACTIVE' : 'ERROR');
           });
-      } else if (MediaAccess.Inactive) {
+      } else if (access === 'INACTIVE') {
         deinitializeCameraStream();
-        setCameraAccess(MediaAccess.Inactive);
+        setCameraAccess('INACTIVE');
       }
     },
     [deinitializeCameraStream]
@@ -301,16 +299,16 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
 
   const requestMicrophoneAccess = useCallback(
     function requestMicrophoneAccessCb(access: MediaAccess): void {
-      if (access === MediaAccess.Active) {
+      if (access === 'ACTIVE') {
         navigator.mediaDevices
           .getUserMedia({
             video: false,
             audio: { echoCancellation: true, noiseSuppression: true },
           })
           .then((stream) => {
-            setMicrophoneAccess(MediaAccess.Active);
+            setMicrophoneAccess('ACTIVE');
             stream.addEventListener('inactive', function microphoneStreamEnded() {
-              setMicrophoneAccess(MediaAccess.Inactive);
+              setMicrophoneAccess('INACTIVE');
 
               const recorder = recorderRef.current;
               if (recorder) {
@@ -334,13 +332,11 @@ export default function Recorder({ onNewDownloadUrl }: RecorderProps) {
           })
           .catch((error) => {
             console.warn('Error accessing microphone stream:', `${error.message} (${error.name})`);
-            setMicrophoneAccess(
-              error.name === 'NotAllowedError' ? MediaAccess.Inactive : MediaAccess.Error
-            );
+            setMicrophoneAccess(error.name === 'NotAllowedError' ? 'INACTIVE' : 'ERROR');
           });
-      } else if (access === MediaAccess.Inactive) {
+      } else if (access === 'INACTIVE') {
         deinitializeMicrophoneStream();
-        setMicrophoneAccess(MediaAccess.Inactive);
+        setMicrophoneAccess('INACTIVE');
       }
     },
     [deinitializeMicrophoneStream]

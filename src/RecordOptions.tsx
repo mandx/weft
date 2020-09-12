@@ -27,12 +27,7 @@ export function qualityToResolution(quality: unknown, defaultResolution: Resolut
   return defaultResolution;
 }
 
-export enum MediaAccess {
-  Active = 'ACTIVE',
-  Inactive = 'INACTIVE',
-  Error = 'ERROR',
-  Denied = 'DENIED',
-}
+export type MediaAccess = 'ACTIVE' | 'INACTIVE' | 'ERROR' | 'DENIED';
 
 export interface RecordingOptionsProps {
   quality?: Quality;
@@ -122,18 +117,14 @@ export default function RecordOptions({
                   type="checkbox"
                   name="include-screen"
                   className="include-screen"
-                  checked={screenAccess === MediaAccess.Active}
+                  checked={screenAccess === 'ACTIVE'}
                   disabled={
-                    !requestScreenAccess ||
-                    screenAccess === MediaAccess.Denied ||
-                    screenAccess === MediaAccess.Error
+                    !requestScreenAccess || screenAccess === 'DENIED' || screenAccess === 'ERROR'
                   }
                   onChange={
                     requestScreenAccess &&
                     ((event) => {
-                      const access = event.currentTarget.checked
-                        ? MediaAccess.Active
-                        : MediaAccess.Inactive;
+                      const access = event.currentTarget.checked ? 'ACTIVE' : 'INACTIVE';
                       requestScreenAccess(access);
                     })
                   }
@@ -150,18 +141,14 @@ export default function RecordOptions({
                   type="checkbox"
                   name="include-camera"
                   className="include-camera"
-                  checked={cameraAccess === MediaAccess.Active}
+                  checked={cameraAccess === 'ACTIVE'}
                   disabled={
-                    !requestCameraAccess ||
-                    cameraAccess === MediaAccess.Denied ||
-                    cameraAccess === MediaAccess.Error
+                    !requestCameraAccess || cameraAccess === 'DENIED' || cameraAccess === 'ERROR'
                   }
                   onChange={
                     requestCameraAccess &&
                     ((event) => {
-                      const access = event.currentTarget.checked
-                        ? MediaAccess.Active
-                        : MediaAccess.Inactive;
+                      const access = event.currentTarget.checked ? 'ACTIVE' : 'INACTIVE';
                       requestCameraAccess(access);
                     })
                   }
@@ -177,18 +164,16 @@ export default function RecordOptions({
                 type="checkbox"
                 name="include-microphone"
                 className="include-microphone"
-                checked={microphoneAccess === MediaAccess.Active}
+                checked={microphoneAccess === 'ACTIVE'}
                 disabled={
                   !requestMicrophoneAccess ||
-                  microphoneAccess === MediaAccess.Denied ||
-                  microphoneAccess === MediaAccess.Error
+                  microphoneAccess === 'DENIED' ||
+                  microphoneAccess === 'ERROR'
                 }
                 onChange={
                   requestMicrophoneAccess &&
                   ((event) => {
-                    const access = event.currentTarget.checked
-                      ? MediaAccess.Active
-                      : MediaAccess.Inactive;
+                    const access = event.currentTarget.checked ? 'ACTIVE' : 'INACTIVE';
                     requestMicrophoneAccess(access);
                   })
                 }
