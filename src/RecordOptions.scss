@@ -91,8 +91,16 @@
     padding: 1em 1em 0;
     border: 1px solid silver;
 
-    label > select {
-      margin-left: 1em;
+    label {
+      & > select {
+        margin-inline-start: 1em;
+      }
+
+      & > svg,
+      & > input[type='checkbox'],
+      & > input[type='radio'] {
+        margin-inline-end: 0.5em;
+      }
     }
 
     li {
