@@ -75,30 +75,30 @@ function DownloadItem({ item, onEditItem, onDeleteItem, onPlayItem }: DownloadIt
         <input defaultValue={item.filename} ref={inputRef} />
       ) : (
         <a href={item.url} download={item.filename} title={item.timestamp.toLocaleString()}>
-          <DownloadIcon /> Download video
+          <DownloadIcon role="presentation" /> Download video
         </a>
       )}
       {editing ? (
         <Fragment>
           <button type="submit">
-            <PencilIcon /> Save
+            <PencilIcon role="presentation" /> Save
           </button>
           <button type="button" onClick={cancelEditing}>
-            <XCircleIcon /> Cancel
+            <XCircleIcon role="presentation" /> Cancel
           </button>
         </Fragment>
       ) : (
         <Fragment>
           <button type="button" onClick={handlePlay}>
-            <PlayIcon /> Play
+            <PlayIcon role="presentation" /> Play
           </button>
           <button type="button" onClick={startEditing}>
-            <PencilIcon /> Rename
+            <PencilIcon role="presentation" /> Rename
           </button>
         </Fragment>
       )}
       <button type="button" onClick={handleDelete}>
-        <TrashIcon /> Delete
+        <TrashIcon role="presentation" /> Delete
       </button>
     </form>
   );

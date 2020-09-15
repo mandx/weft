@@ -380,6 +380,7 @@ export default function Recorder({ onNewDownloadUrl, emitNotification }: Recorde
   return (
     <div className="recorder">
       <canvas
+        aria-label="Recording canvas"
         ref={canvasRef}
         className="recording-canvas"
         width={resolutionWidth}

@@ -55,7 +55,11 @@ export default function FullscreenToggle() {
       type="button"
       disabled={enteringFullscreen || exitingFullscreen}
       onClick={currentlyFullscreen ? exitFullscreen : enterFullscreen}>
-      {currentlyFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+      {currentlyFullscreen ? (
+        <FullscreenExitIcon role="presentation" />
+      ) : (
+        <FullscreenIcon role="presentation" />
+      )}
       {currentlyFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
     </button>
   );

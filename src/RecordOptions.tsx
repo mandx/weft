@@ -91,12 +91,16 @@ export default function RecordOptions({
   return (
     <div className="recording-actions">
       <button className="recording" onClick={toggleRecording}>
-        {recording ? <CameraReelsIcon /> : <CameraReelsFillIcon />}
+        {recording ? (
+          <CameraReelsIcon role="presentation" />
+        ) : (
+          <CameraReelsFillIcon role="presentation" />
+        )}
         {recording ? 'Stop recording' : 'Start recording'}
       </button>
       <div className={`recording-options-container ${expanded ? 'expanded' : ''}`}>
         <button className="recording-options" title="Recording options" onClick={optionsClicked}>
-          {expanded ? <GearIcon /> : <GearFillIcon />}
+          {expanded ? <GearIcon role="presentation" /> : <GearFillIcon role="presentation" />}
           Options
         </button>
         <ul className="recording-options-menu">
@@ -112,7 +116,7 @@ export default function RecordOptions({
           {!!screenAccess && (
             <li>
               <label>
-                <WindowIcon />
+                <WindowIcon role="presentation" />
                 <input
                   type="checkbox"
                   name="include-screen"
@@ -136,7 +140,7 @@ export default function RecordOptions({
           {!!cameraAccess && (
             <li>
               <label>
-                <CameraVideoIcon />
+                <CameraVideoIcon role="presentation" />
                 <input
                   type="checkbox"
                   name="include-camera"
@@ -159,7 +163,7 @@ export default function RecordOptions({
           )}
           <li>
             <label>
-              <MicIcon />
+              <MicIcon role="presentation" />
               <input
                 type="checkbox"
                 name="include-microphone"
