@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from 'react';
 
+import { SKIP_RECORDER_RENDER_LOOP } from './config';
 import './Recorder.scss';
 import MediaRecorderWrapper from './media-recorder-wrapper';
 import RecordOptions, {
@@ -177,7 +178,19 @@ export default function Recorder({ onNewDownloadUrl, emitNotification }: Recorde
   );
 
   useEffect(() => {
-    composeFrames();
+    if (SKIP_RECORDER_RENDER_LOOP) {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const context = canvas.getContext('2d');
+        if (context) {
+          context.fillStyle = 'black';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+    } else {
+      composeFrames();
+    }
+
     return () => {
       frameRequestContinue.current = false;
     };

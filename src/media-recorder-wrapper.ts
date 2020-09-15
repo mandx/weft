@@ -31,38 +31,48 @@ export default class MediaRecorderWrapper {
   private blobPromise: Promise<Blob>;
   private blobPromiseResolver: ((blob: Blob) => void) | null;
 
+  /** Get the stream being recorded */
   get stream(): MediaStream {
     return this.mediaRecorder.stream;
   }
 
+  /**
+   * Start the recorder; returns `this` recorder instance.
+   */
   start() {
-    console.log('MediaRecorderWrapper started');
     this.mediaRecorder.start();
     return this;
   }
 
+  /**
+   * Stop recording. IF we want to start recording again, then we would have
+   * to create a new `MediaRecorderWrapper` instance. Returns a promise with a
+   * blob with all the recorded video data.
+   *
+   * @param {boolean} ignoreIfInactive - prevent raising `DOMException`s if the
+   * recorder is already stopped.
+   */
   async stop(ignoreIfInactive?: boolean): Promise<Blob> {
-    console.log('MediaRecorderWrapper stopping');
     if (!ignoreIfInactive || this.mediaRecorder.state !== 'inactive') {
       this.mediaRecorder.stop();
     }
     return await this.blobPromise;
   }
 
-  handleRecorderStop(): void {
+  private handleRecorderStop(): void {
     if (this.blobPromiseResolver) {
       this.blobPromiseResolver(new Blob(this.chunks.splice(0), { type: 'video/webm' }));
     }
   }
 
-  handleRecorderChunk({ data }: BlobEvent): void {
+  private handleRecorderChunk({ data }: BlobEvent): void {
     if (data.size) {
       console.log('Pushing', data.size, 'bytes');
       this.chunks.push(data);
     }
   }
 
-  handleRecorderError(event: Event): void {
+  private handleRecorderError(event: Event): void {
     console.log('Recorder error:', event);
     this.mediaRecorder.stop();
   }
