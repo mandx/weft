@@ -4,6 +4,7 @@ import './App.scss';
 import Recorder from './Recorder';
 import DownloadsListManager, { DownloadUrl } from './DownloadsList';
 import Notifications, { NotificationsEmitter, createNotificationsEmitter } from './Notifications';
+import Modal from './Modal';
 
 export default function App() {
   const notificationsEmitterRef = useRef<NotificationsEmitter>(createNotificationsEmitter());
@@ -65,12 +66,12 @@ export default function App() {
         emitNotification={notificationsEmitterRef.current.emit}
       />
       {!!playingUrl && (
-        <dialog open className="video-playback">
+        <Modal open onClose={closeVideoPlayer}>
           <button type="button" onClick={closeVideoPlayer}>
             Close player
           </button>
           <video src={playingUrl ? playingUrl.url : undefined} controls />
-        </dialog>
+        </Modal>
       )}
       <Notifications emitter={notificationsEmitterRef.current} />
     </Fragment>
