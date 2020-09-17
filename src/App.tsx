@@ -1,13 +1,14 @@
-import React, { Fragment, useEffect, useRef, useState, useCallback } from 'react';
+import React, { Fragment, useEffect, useState, useCallback } from 'react';
 
 import './App.scss';
 import Recorder from './Recorder';
 import DownloadsListManager, { DownloadUrl } from './DownloadsList';
-import Notifications, { NotificationsEmitter, createNotificationsEmitter } from './Notifications';
+import Notifications, { createNotificationsEmitter } from './Notifications';
 import Modal from './Modal';
+import { useConstant } from './hooks';
 
 export default function App() {
-  const notificationsEmitterRef = useRef<NotificationsEmitter>(createNotificationsEmitter());
+  const notificationsEmitter = useConstant(createNotificationsEmitter);
 
   const [downloads, setDownloads] = useState<DownloadUrl[]>([]);
   const [playingUrl, setPlayingUrl] = useState<DownloadUrl | null>(null);
@@ -61,10 +62,7 @@ export default function App() {
           onPlayItem={playVideo}
         />
       </nav>
-      <Recorder
-        onNewDownloadUrl={addNewDownloadUrl}
-        emitNotification={notificationsEmitterRef.current.emit}
-      />
+      <Recorder onNewDownloadUrl={addNewDownloadUrl} emitNotification={notificationsEmitter.emit} />
       {!!playingUrl && (
         <Modal open onClose={closeVideoPlayer}>
           <button type="button" onClick={closeVideoPlayer}>
@@ -73,7 +71,7 @@ export default function App() {
           <video src={playingUrl ? playingUrl.url : undefined} controls />
         </Modal>
       )}
-      <Notifications emitter={notificationsEmitterRef.current} />
+      <Notifications emitter={notificationsEmitter} />
     </Fragment>
   );
 }
