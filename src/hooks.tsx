@@ -2,6 +2,9 @@ import React, { useRef, MutableRefObject } from 'react';
 
 type AllPossibleRefTypes<T> = ((instance: T | null) => void) | MutableRefObject<T | null>;
 
+/**
+ * Maybe we don't need this and use `useImperativeHandle` instead...
+ */
 export function useCombinedRefs<T>(
   ...refs: (AllPossibleRefTypes<T> | null)[]
 ): MutableRefObject<T | null> {

@@ -22,7 +22,9 @@ import { NotificationLevel } from './Notifications';
 const HIDDEN: React.CSSProperties = { display: 'none ' };
 
 interface RecorderProps {
+  /** Callback that will be triggered when a new video blob is ready */
   onNewDownloadUrl(downloadUrl: DownloadUrl): void;
+  /** Callback to emit generic, app-wide, user notifications */
   emitNotification(content: ReactNode, level: NotificationLevel): void;
 }
 

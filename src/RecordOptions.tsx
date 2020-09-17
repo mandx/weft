@@ -11,10 +11,17 @@ import FullscreenToggle from './FullscreenToggle';
 import './RecordOptions.scss';
 
 export type Quality = '720p' | '1080p';
+
+/**
+ * A [width: number, height: number] tuple
+ */
 export type Resolution = [number, number];
 
 export const DEFAULT_RESOLUTION: Resolution = [1280, 720];
 
+/**
+ * Try to return a resolution from a given `quality`
+ */
 export function qualityToResolution(quality: unknown, defaultResolution: Resolution): Resolution {
   switch (quality) {
     case '720p': {
@@ -27,22 +34,60 @@ export function qualityToResolution(quality: unknown, defaultResolution: Resolut
   return defaultResolution;
 }
 
+/**
+ * Enum indicating the current state of a media stream.
+ *
+ * 'ACTIVE': Media currently in use
+ * 'INACTIVE': Media not in use
+ * 'ERROR': Error accessing media stream
+ * 'DENIED': User denied access to the stream - Are we using this now?
+ */
 export type MediaAccess = 'ACTIVE' | 'INACTIVE' | 'ERROR' | 'DENIED';
 
 export interface RecordingOptionsProps {
+  /**
+   * Selected quality setting
+   */
   quality?: Quality;
+  /**
+   * Callback triggered when a new quality setting is selected
+   */
   onChangeQuality?: (quality: Quality) => void;
 
+  /**
+   * Access status of the screen stream
+   */
   screenAccess?: MediaAccess;
+  /**
+   * Callback triggered access to the screen is requested or deactivated
+   */
   requestScreenAccess?: (access: MediaAccess) => void;
 
+  /**
+   * Access status of the camera stream
+   */
   cameraAccess?: MediaAccess;
+  /**
+   * Callback triggered access to the camera is requested or deactivated
+   */
   requestCameraAccess?: (access: MediaAccess) => void;
 
+  /**
+   * Access status of the microphone stream
+   */
   microphoneAccess?: MediaAccess;
+  /**
+   * Callback triggered access to the microphone is requested or deactivated
+   */
   requestMicrophoneAccess?: (access: MediaAccess) => void;
 
+  /**
+   * Indicates if recording is in progress or not
+   */
   recording?: boolean;
+  /**
+   * Callback triggered when recording is to be started or stopped
+   */
   toggleRecording?: () => void;
 }
 

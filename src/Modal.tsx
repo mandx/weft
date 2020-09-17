@@ -3,11 +3,27 @@ import { createPortal } from 'react-dom';
 
 import './Modal.scss';
 
+type CloseIntent = 'EscapeKey' | 'BackdropClick';
+
 interface ModalProps {
+  /**
+   * Content to render inside the Modal
+   */
   children?: ReactNode;
+  /**
+   * DOM element to use as the Portal root
+   */
   container: Element;
+  /**
+   * Setting this to false makes the component render `null`
+   */
   open?: boolean;
-  onClose?: () => void;
+  /**
+   * Callback triggered with a close intent from the user
+   *
+   * @param intent - The intent used
+   */
+  onClose?: (intent: CloseIntent) => void;
 }
 
 export default function Modal({ children, container, open, onClose }: ModalProps) {
@@ -15,7 +31,7 @@ export default function Modal({ children, container, open, onClose }: ModalProps
 
   const clickClose = useCallback(
     function <T>(_event: React.MouseEvent<T>) {
-      onClose?.();
+      onClose?.('BackdropClick');
     },
     [onClose]
   );
@@ -25,7 +41,7 @@ export default function Modal({ children, container, open, onClose }: ModalProps
       console.log(event.target);
       if (event.key === 'Escape') {
         event.preventDefault();
-        onClose?.();
+        onClose?.('EscapeKey');
       }
     },
     [onClose]
