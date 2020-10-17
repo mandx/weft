@@ -1,4 +1,5 @@
-import React, { Fragment, useEffect, useState, useCallback } from 'react';
+import React, { Fragment, useState, useCallback } from 'react';
+import { ReactComponent as XCircleIcon } from 'bootstrap-icons/icons/x-circle-fill.svg';
 
 import './App.scss';
 import Recorder from './Recorder';
@@ -50,6 +51,10 @@ export default function App() {
     setPlayingUrl(null);
   }, []);
 
+  React.useEffect(() => {
+    (window as any).emitNotification = notificationsEmitter.emit;
+  }, [notificationsEmitter.emit]);
+
   return (
     <Fragment>
       <nav className="main-nav">
@@ -62,13 +67,17 @@ export default function App() {
           onPlayItem={playVideo}
         />
       </nav>
-      <Recorder onNewDownloadUrl={addNewDownloadUrl} emitNotification={notificationsEmitter.emit} />
+      <Recorder
+       onNewDownloadUrl={addNewDownloadUrl} emitNotification={notificationsEmitter.emit} />
       {!!playingUrl && (
-        <Modal open onClose={closeVideoPlayer}>
-          <button type="button" onClick={closeVideoPlayer}>
-            Close player
+        <Modal className="preview-video-player-modal" open onClose={closeVideoPlayer}>
+          <button className="preview-video-player-close" title="Close player" type="button" onClick={closeVideoPlayer}>
+            <XCircleIcon role="presentation" />
           </button>
-          <video src={playingUrl ? playingUrl.url : undefined} controls />
+
+          <video src={playingUrl ? playingUrl.url : undefined}
+            className="preview-video-player"
+           controls />
         </Modal>
       )}
       <Notifications emitter={notificationsEmitter} />

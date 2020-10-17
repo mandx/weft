@@ -6,6 +6,7 @@ import './Modal.scss';
 type CloseIntent = 'EscapeKey' | 'BackdropClick';
 
 interface ModalProps {
+  className?: string;
   /**
    * Content to render inside the Modal
    */
@@ -26,7 +27,7 @@ interface ModalProps {
   onClose?: (intent: CloseIntent) => void;
 }
 
-export default function Modal({ children, container, open, onClose }: ModalProps) {
+export default function Modal({ className, children, container, open, onClose }: ModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const clickClose = useCallback(
@@ -64,7 +65,7 @@ export default function Modal({ children, container, open, onClose }: ModalProps
       onKeyDown={keyboardClose}
       tabIndex={-1}>
       <div className="modal-dialog-backdrop" aria-hidden onClick={clickClose}></div>
-      <div className="modal-dialog-content">{children}</div>
+      <div className={`modal-dialog-content ${className || ''}`}>{children}</div>
     </div>,
     container
   );
