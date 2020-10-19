@@ -6,10 +6,40 @@ import Recorder from './Recorder';
 import DownloadsListManager, { DownloadUrl } from './DownloadsList';
 import Notifications, { createNotificationsEmitter } from './Notifications';
 import Modal from './Modal';
+import Tour, { TourCallBackProps } from './Tour';
 import { useConstant } from './hooks';
+
+const TOUR_STEPS: React.ComponentProps<typeof Tour>['steps'] = [
+  {
+    target: '.main-nav .main-header',
+    content: (
+      <Fragment>
+        <strong>Welcome to Weft!</strong>
+        <p>
+          This is a experimental web tool that allows you to record yourself and your screen
+          simultaneously using only a modern browser.
+        </p>
+      </Fragment>
+    ),
+  },
+  {
+    target: '.recording-actions .recording-options-container',
+    content: 'Use this menu to configure your recording.',
+  },
+  {
+    target: '.recording-actions .recording',
+    content: 'Use this button to initiate the recording',
+  },
+];
 
 export default function App() {
   const notificationsEmitter = useConstant(createNotificationsEmitter);
+  const runTour = useConstant(
+    () =>
+      !(['finished', 'ready'] as (string | null)[]).includes(
+        localStorage.getItem('weft.tour.status')
+      )
+  );
 
   const [downloads, setDownloads] = useState<DownloadUrl[]>([]);
   const [playingUrl, setPlayingUrl] = useState<DownloadUrl | null>(null);
@@ -55,8 +85,20 @@ export default function App() {
     (window as any).emitNotification = notificationsEmitter.emit;
   }, [notificationsEmitter.emit]);
 
+  const tourCallback = useCallback(function tourStateCb({ status }: TourCallBackProps) {
+    localStorage.setItem('weft.tour.status', status);
+  }, []);
+
   return (
     <Fragment>
+      <Tour
+        steps={TOUR_STEPS}
+        continuous
+        run={runTour}
+        showProgress
+        showSkipButton
+        callback={tourCallback}
+      />
       <nav className="main-nav">
         <header className="main-header">
           <h1>Weft</h1>
@@ -67,17 +109,22 @@ export default function App() {
           onPlayItem={playVideo}
         />
       </nav>
-      <Recorder
-       onNewDownloadUrl={addNewDownloadUrl} emitNotification={notificationsEmitter.emit} />
+      <Recorder onNewDownloadUrl={addNewDownloadUrl} emitNotification={notificationsEmitter.emit} />
       {!!playingUrl && (
         <Modal className="preview-video-player-modal" open onClose={closeVideoPlayer}>
-          <button className="preview-video-player-close" title="Close player" type="button" onClick={closeVideoPlayer}>
+          <button
+            className="preview-video-player-close"
+            title="Close player"
+            type="button"
+            onClick={closeVideoPlayer}>
             <XCircleIcon role="presentation" />
           </button>
 
-          <video src={playingUrl ? playingUrl.url : undefined}
+          <video
+            src={playingUrl ? playingUrl.url : undefined}
             className="preview-video-player"
-           controls />
+            controls
+          />
         </Modal>
       )}
       <Notifications emitter={notificationsEmitter} />
