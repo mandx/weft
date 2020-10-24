@@ -29,7 +29,8 @@ interface MediaRecorder extends EventTarget {
   ): void;
 }
 
-declare var MediaRecorder: {
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+declare const MediaRecorder: {
   prototype: MediaRecorder;
 
   static isTypeSupported(mimeType: string): boolean;
