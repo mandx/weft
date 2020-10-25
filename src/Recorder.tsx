@@ -49,7 +49,6 @@ export default function Recorder({ onNewDownloadUrl, emitNotification }: Recorde
   const [resolutionWidth, resolutionHeight] = qualityToResolution(quality, DEFAULT_RESOLUTION);
 
   // requestAnimationFrame loop state
-  const frameRequestId: MutableRefObject<number> = useRef(0);
   const frameRequestContinue: MutableRefObject<boolean> = useRef(true);
   const lastFrameTimestamp: MutableRefObject<ReturnType<typeof performance.now>> = useRef(
     performance.now()
@@ -61,9 +60,8 @@ export default function Recorder({ onNewDownloadUrl, emitNotification }: Recorde
 
   const composeFrames = useCallback(
     function composeFramesCb(/* timestamp: number */) {
-      cancelAnimationFrame(frameRequestId.current);
       if (frameRequestContinue.current) {
-        frameRequestId.current = requestAnimationFrame(composeFrames);
+        requestAnimationFrame(composeFrames);
       }
 
       const timestamp = performance.now();
