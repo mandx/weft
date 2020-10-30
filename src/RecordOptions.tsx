@@ -134,105 +134,107 @@ export default function RecordOptions({
   );
 
   return (
-    <div className="recording-actions">
-      <button className="recording" onClick={toggleRecording}>
-        {recording ? (
-          <CameraReelsIcon role="presentation" />
-        ) : (
-          <CameraReelsFillIcon role="presentation" />
-        )}
-        {recording ? 'Stop recording' : 'Start recording'}
-      </button>
-      <div className={`recording-options-container ${expanded ? 'expanded' : ''}`}>
-        <button className="recording-options" title="Recording options" onClick={optionsClicked}>
-          {expanded ? <GearIcon role="presentation" /> : <GearFillIcon role="presentation" />}
-          Options
+    <div className="recording-actions-wrapper">
+      <div className="recording-actions">
+        <button className="recording" onClick={toggleRecording}>
+          {recording ? (
+            <CameraReelsIcon role="presentation" />
+          ) : (
+            <CameraReelsFillIcon role="presentation" />
+          )}
+          {recording ? 'Stop recording' : 'Start recording'}
         </button>
-        <ul className="recording-options-menu">
-          <li>
-            <label>
-              Quality
-              <select name="quality" value={quality} onChange={selectQuality}>
-                <option value="720p">720p</option>
-                <option value="1080p">1080p</option>
-              </select>
-            </label>
-          </li>
-          {!!screenAccess && (
+        <div className={`recording-options-container ${expanded ? 'expanded' : ''}`}>
+          <button className="recording-options" title="Recording options" onClick={optionsClicked}>
+            {expanded ? <GearIcon role="presentation" /> : <GearFillIcon role="presentation" />}
+            Options
+          </button>
+          <ul className="recording-options-menu">
             <li>
               <label>
-                <WindowIcon role="presentation" />
+                Quality
+                <select name="quality" value={quality} onChange={selectQuality}>
+                  <option value="720p">720p</option>
+                  <option value="1080p">1080p</option>
+                </select>
+              </label>
+            </li>
+            {!!screenAccess && (
+              <li>
+                <label>
+                  <WindowIcon role="presentation" />
+                  <input
+                    type="checkbox"
+                    name="include-screen"
+                    className="include-screen"
+                    checked={screenAccess === 'ACTIVE'}
+                    disabled={
+                      !requestScreenAccess || screenAccess === 'DENIED' || screenAccess === 'ERROR'
+                    }
+                    onChange={
+                      requestScreenAccess &&
+                      ((event) => {
+                        const access = event.currentTarget.checked ? 'ACTIVE' : 'INACTIVE';
+                        requestScreenAccess(access);
+                      })
+                    }
+                  />
+                  Include screen
+                </label>
+              </li>
+            )}
+            {!!cameraAccess && (
+              <li>
+                <label>
+                  <CameraVideoIcon role="presentation" />
+                  <input
+                    type="checkbox"
+                    name="include-camera"
+                    className="include-camera"
+                    checked={cameraAccess === 'ACTIVE'}
+                    disabled={
+                      !requestCameraAccess || cameraAccess === 'DENIED' || cameraAccess === 'ERROR'
+                    }
+                    onChange={
+                      requestCameraAccess &&
+                      ((event) => {
+                        const access = event.currentTarget.checked ? 'ACTIVE' : 'INACTIVE';
+                        requestCameraAccess(access);
+                      })
+                    }
+                  />
+                  Include camera
+                </label>
+              </li>
+            )}
+            <li>
+              <label>
+                <MicIcon role="presentation" />
                 <input
                   type="checkbox"
-                  name="include-screen"
-                  className="include-screen"
-                  checked={screenAccess === 'ACTIVE'}
+                  name="include-microphone"
+                  className="include-microphone"
+                  checked={microphoneAccess === 'ACTIVE'}
                   disabled={
-                    !requestScreenAccess || screenAccess === 'DENIED' || screenAccess === 'ERROR'
+                    !requestMicrophoneAccess ||
+                    microphoneAccess === 'DENIED' ||
+                    microphoneAccess === 'ERROR'
                   }
                   onChange={
-                    requestScreenAccess &&
+                    requestMicrophoneAccess &&
                     ((event) => {
                       const access = event.currentTarget.checked ? 'ACTIVE' : 'INACTIVE';
-                      requestScreenAccess(access);
+                      requestMicrophoneAccess(access);
                     })
                   }
                 />
-                Include screen
+                Include microphone
               </label>
             </li>
-          )}
-          {!!cameraAccess && (
-            <li>
-              <label>
-                <CameraVideoIcon role="presentation" />
-                <input
-                  type="checkbox"
-                  name="include-camera"
-                  className="include-camera"
-                  checked={cameraAccess === 'ACTIVE'}
-                  disabled={
-                    !requestCameraAccess || cameraAccess === 'DENIED' || cameraAccess === 'ERROR'
-                  }
-                  onChange={
-                    requestCameraAccess &&
-                    ((event) => {
-                      const access = event.currentTarget.checked ? 'ACTIVE' : 'INACTIVE';
-                      requestCameraAccess(access);
-                    })
-                  }
-                />
-                Include camera
-              </label>
-            </li>
-          )}
-          <li>
-            <label>
-              <MicIcon role="presentation" />
-              <input
-                type="checkbox"
-                name="include-microphone"
-                className="include-microphone"
-                checked={microphoneAccess === 'ACTIVE'}
-                disabled={
-                  !requestMicrophoneAccess ||
-                  microphoneAccess === 'DENIED' ||
-                  microphoneAccess === 'ERROR'
-                }
-                onChange={
-                  requestMicrophoneAccess &&
-                  ((event) => {
-                    const access = event.currentTarget.checked ? 'ACTIVE' : 'INACTIVE';
-                    requestMicrophoneAccess(access);
-                  })
-                }
-              />
-              Include microphone
-            </label>
-          </li>
-        </ul>
+          </ul>
+        </div>
+        <FullscreenToggle />
       </div>
-      <FullscreenToggle />
     </div>
   );
 }

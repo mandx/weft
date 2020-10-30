@@ -13,12 +13,22 @@
   }
 }
 
-.recording-actions {
+.recording-actions-wrapper {
   position: absolute;
-  bottom: 0;
+  bottom: -3em;
   left: 0;
   display: flex;
-  overflow: visible;
+  right: 0;
+  justify-content: center;
+  transition-duration: 300ms;
+
+  &:hover {
+    bottom: 0;
+  }
+}
+
+.recording-actions {
+  display: flex;
   align-items: stretch;
   background: black;
   color: white;
@@ -28,12 +38,6 @@
   > * {
     margin-left: 1em;
   }
-
-  /*
-  .toolbar {
-    display: flex;
-  }
-  */
 
   button {
     padding: 0.8em 1em 1em;
