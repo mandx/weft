@@ -3,7 +3,7 @@ import { ReactComponent as XCircleIcon } from 'bootstrap-icons/icons/x-circle-fi
 
 import './App.scss';
 import Recorder from './Recorder';
-import DownloadsListManager, { DownloadUrl } from './DownloadsList';
+import RecordingsList, { Recording } from './RecordingsList';
 import Notifications, { createNotificationsEmitter } from './Notifications';
 import Modal from './Modal';
 import Tour, { TourCallBackProps } from './Tour';
@@ -41,22 +41,22 @@ export default function App() {
       )
   );
 
-  const [downloads, setDownloads] = useState<DownloadUrl[]>([]);
-  const [playingUrl, setPlayingUrl] = useState<DownloadUrl | null>(null);
+  const [recordings, setRecordings] = useState<Recording[]>([]);
+  const [playing, setPlaying] = useState<Recording | undefined>(undefined);
 
-  const addNewDownloadUrl = useCallback(function addNewDownloadUrlCb(
-    downloadUrl: DownloadUrl
+  const addNewRecording = useCallback(function addNewDownloadUrlCb(
+    recording: Recording
   ): void {
-    setDownloads((downloads) => [downloadUrl, ...downloads]);
+    setRecordings((recordings) => [recording, ...recordings]);
   },
   []);
 
-  const setDownloadList = useCallback(function setDownloadListCb(newList: DownloadUrl[]): void {
-    setDownloads((oldList) => {
+  const setRecordingsList = useCallback(function setDownloadListCb(newList: Recording[]): void {
+    setRecordings((currentList) => {
       // We need to revoke in-memory blob URLs that might have been deleted
-      const pickUrl = (item: DownloadUrl) => item.url;
+      const pickUrl = (item: Recording) => item.url;
 
-      const oldUrls = new Set(oldList.map(pickUrl));
+      const oldUrls = new Set(currentList.map(pickUrl));
       Array.from(new Set(newList.map(pickUrl).filter((url) => !oldUrls.has(url)))).forEach(
         URL.revokeObjectURL
       );
@@ -66,23 +66,23 @@ export default function App() {
   }, []);
 
   const playVideo = useCallback(function playVideoCb<T>(
-    item: DownloadUrl,
+    recording: Recording,
     event: React.MouseEvent<T>
   ): void {
     if (event.ctrlKey) {
-      window.open(item.url, '_blank');
+      window.open(recording.url, '_blank');
     } else {
-      setPlayingUrl(item);
+      setPlaying(recording);
     }
   },
   []);
 
   const closeVideoPlayer = useCallback(function closeVideoPlayerCb() {
-    setPlayingUrl(null);
+    setPlaying(undefined);
   }, []);
 
   React.useEffect(() => {
-    (window as any).emitNotification = notificationsEmitter.emit;
+    Object.assign(window, { emitNotification: notificationsEmitter.emit })
   }, [notificationsEmitter.emit]);
 
   const tourCallback = useCallback(function tourStateCb({ status }: TourCallBackProps) {
@@ -103,14 +103,14 @@ export default function App() {
         <header className="main-header">
           <h1>Weft</h1>
         </header>
-        <DownloadsListManager
-          items={downloads}
-          onEditItems={setDownloadList}
-          onPlayItem={playVideo}
+        <RecordingsList
+          recordings={recordings}
+          onEditRecordings={setRecordingsList}
+          onPlayRecording={playVideo}
         />
       </nav>
-      <Recorder onNewDownloadUrl={addNewDownloadUrl} emitNotification={notificationsEmitter.emit} />
-      {!!playingUrl && (
+      <Recorder onNewRecording={addNewRecording} emitNotification={notificationsEmitter.emit} />
+      {!!playing && (
         <Modal className="preview-video-player-modal" open onClose={closeVideoPlayer}>
           <button
             className="preview-video-player-close"
@@ -121,7 +121,7 @@ export default function App() {
           </button>
 
           <video
-            src={playingUrl ? playingUrl.url : undefined}
+            src={playing.url}
             className="preview-video-player"
             controls
           />

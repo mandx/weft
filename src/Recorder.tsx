@@ -16,14 +16,14 @@ import RecordOptions, {
   qualityToResolution,
   DEFAULT_RESOLUTION,
 } from './RecordOptions';
-import { DownloadUrl, createDownloadUrl } from './DownloadsList';
+import { Recording } from './RecordingsList';
 import { NotificationLevel } from './Notifications';
 
 const HIDDEN: React.CSSProperties = { display: 'none ' };
 
 interface RecorderProps {
   /** Callback that will be triggered when a new video blob is ready */
-  onNewDownloadUrl(downloadUrl: DownloadUrl): void;
+  onNewRecording(recording: Recording): void;
   /** Callback to emit generic, app-wide, user notifications */
   emitNotification(content: ReactNode, level: NotificationLevel): void;
 }
@@ -31,28 +31,30 @@ interface RecorderProps {
 const FRAMES_PER_SECOND = 30;
 const FRAME_INTERVAL = 1000 / FRAMES_PER_SECOND;
 
-export default function Recorder({ onNewDownloadUrl, emitNotification }: RecorderProps) {
+export default function Recorder({ onNewRecording, emitNotification }: RecorderProps) {
   const imagePatternRef = useRef<HTMLImageElement>(null);
   const canvasPatternRef: MutableRefObject<CanvasPattern | null> = useRef(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const microphoneAudioRef = useRef<HTMLAudioElement>(null);
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
   const screenVideoRef = useRef<HTMLVideoElement>(null);
+
+  /** This needs to be kept in sync with the `recording` state variable */
   const recorderRef: MutableRefObject<MediaRecorderWrapper | null> = useRef(null);
 
   const [quality, setQuality] = useState<Quality>('720p');
   const [screenAccess, setScreenAccess] = useState<MediaAccess>('INACTIVE');
   const [cameraAccess, setCameraAccess] = useState<MediaAccess>('INACTIVE');
   const [microphoneAccess, setMicrophoneAccess] = useState<MediaAccess>('INACTIVE');
+
+  /** This needs to be kept in sync with `recorderRef` */
   const [recording, setRecording] = useState<boolean>(false);
 
   const [resolutionWidth, resolutionHeight] = qualityToResolution(quality, DEFAULT_RESOLUTION);
 
   // requestAnimationFrame loop state
   const frameRequestContinue: MutableRefObject<boolean> = useRef(true);
-  const lastFrameTimestamp: MutableRefObject<ReturnType<typeof performance.now>> = useRef(
-    performance.now()
-  );
+  const lastFrameTimestamp: MutableRefObject<ReturnType<typeof performance.now>> = useRef(0);
 
   // TODO: Allow choosing framerate
   // const framesPerSecond = 30;
@@ -91,7 +93,6 @@ export default function Recorder({ onNewDownloadUrl, emitNotification }: Recorde
           }
 
           context.fillStyle = canvasPatternRef.current || 'black';
-
           context.fillRect(0, 0, canvasWidth, canvasHeight);
 
           const screenVideo = screenVideoRef.current;
@@ -203,7 +204,7 @@ export default function Recorder({ onNewDownloadUrl, emitNotification }: Recorde
         console.log('Stopping recording');
         recorderRef.current = null;
         recorder.stop().then((blob) => {
-          onNewDownloadUrl(createDownloadUrl(blob));
+          onNewRecording(new Recording(blob));
         });
         setRecording(false);
       } else {
@@ -225,7 +226,7 @@ export default function Recorder({ onNewDownloadUrl, emitNotification }: Recorde
         }
       }
     },
-    [microphoneAccess, onNewDownloadUrl]
+    [microphoneAccess, onNewRecording]
   );
 
   const deinitializeScreenStream = useCallback(function deinitializeScreenStreamCb() {
