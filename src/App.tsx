@@ -2,7 +2,7 @@ import React, { Fragment, useState, useCallback } from 'react';
 import { ReactComponent as XCircleIcon } from 'bootstrap-icons/icons/x-circle-fill.svg';
 
 import './App.scss';
-import Recorder from './Recorder';
+import Recorder, { RecorderState } from './Recorder';
 import RecordingsList, { Recording } from './RecordingsList';
 import Notifications, { createNotificationsEmitter } from './Notifications';
 import Modal from './Modal';
@@ -41,15 +41,13 @@ export default function App() {
       )
   );
 
+  const [recordingState, setRecordingState] = useState<RecorderState>('STOPPED');
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [playing, setPlaying] = useState<Recording | undefined>(undefined);
 
-  const addNewRecording = useCallback(function addNewDownloadUrlCb(
-    recording: Recording
-  ): void {
+  const addNewRecording = useCallback(function addNewDownloadUrlCb(recording: Recording): void {
     setRecordings((recordings) => [recording, ...recordings]);
-  },
-  []);
+  }, []);
 
   const setRecordingsList = useCallback(function setDownloadListCb(newList: Recording[]): void {
     setRecordings((currentList) => {
@@ -82,7 +80,7 @@ export default function App() {
   }, []);
 
   React.useEffect(() => {
-    Object.assign(window, { emitNotification: notificationsEmitter.emit })
+    Object.assign(window, { emitNotification: notificationsEmitter.emit });
   }, [notificationsEmitter.emit]);
 
   const tourCallback = useCallback(function tourStateCb({ status }: TourCallBackProps) {
@@ -103,13 +101,19 @@ export default function App() {
         <header className="main-header">
           <h1>Weft</h1>
         </header>
-        <RecordingsList
-          recordings={recordings}
-          onEditRecordings={setRecordingsList}
-          onPlayRecording={playVideo}
-        />
+        {recordingState !== 'STARTED' && (
+          <RecordingsList
+            recordings={recordings}
+            onEditRecordings={setRecordingsList}
+            onPlayRecording={playVideo}
+          />
+        )}
       </nav>
-      <Recorder onNewRecording={addNewRecording} emitNotification={notificationsEmitter.emit} />
+      <Recorder
+        onNewRecording={addNewRecording}
+        emitNotification={notificationsEmitter.emit}
+        onRecordingStateChange={setRecordingState}
+      />
       {!!playing && (
         <Modal className="preview-video-player-modal" open onClose={closeVideoPlayer}>
           <button
@@ -120,11 +124,7 @@ export default function App() {
             <XCircleIcon role="presentation" />
           </button>
 
-          <video
-            src={playing.url}
-            className="preview-video-player"
-            controls
-          />
+          <video src={playing.url} className="preview-video-player" controls />
         </Modal>
       )}
       <Notifications emitter={notificationsEmitter} />

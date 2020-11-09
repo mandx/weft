@@ -21,17 +21,27 @@ import { NotificationLevel } from './Notifications';
 
 const HIDDEN: React.CSSProperties = { display: 'none ' };
 
+export type RecorderState = 'STARTED' | 'STOPPED';
+
 interface RecorderProps {
   /** Callback that will be triggered when a new video blob is ready */
   onNewRecording(recording: Recording): void;
+
   /** Callback to emit generic, app-wide, user notifications */
   emitNotification(content: ReactNode, level: NotificationLevel): void;
+
+  /** Signal when recording has been started/stopped */
+  onRecordingStateChange(state: RecorderState): void;
 }
 
 const FRAMES_PER_SECOND = 30;
 const FRAME_INTERVAL = 1000 / FRAMES_PER_SECOND;
 
-export default function Recorder({ onNewRecording, emitNotification }: RecorderProps) {
+export default function Recorder({
+  onNewRecording,
+  emitNotification,
+  onRecordingStateChange,
+}: RecorderProps) {
   const imagePatternRef = useRef<HTMLImageElement>(null);
   const canvasPatternRef: MutableRefObject<CanvasPattern | null> = useRef(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -207,6 +217,7 @@ export default function Recorder({ onNewRecording, emitNotification }: RecorderP
           onNewRecording(new Recording(blob));
         });
         setRecording(false);
+        onRecordingStateChange('STOPPED');
       } else {
         const tracks: MediaStreamTrack[] = [];
 
@@ -223,10 +234,11 @@ export default function Recorder({ onNewRecording, emitNotification }: RecorderP
         if (tracks.length) {
           recorderRef.current = new MediaRecorderWrapper(new MediaStream(tracks)).start();
           setRecording(true);
+          onRecordingStateChange('STARTED');
         }
       }
     },
-    [microphoneAccess, onNewRecording]
+    [microphoneAccess, onNewRecording, onRecordingStateChange]
   );
 
   const deinitializeScreenStream = useCallback(function deinitializeScreenStreamCb() {

@@ -15,9 +15,7 @@ export class Recording {
   private _filename: string;
 
   constructor(src: Blob | URLStr) {
-    this._url = src instanceof Blob
-      ? URL.createObjectURL(src)
-      : src;
+    this._url = src instanceof Blob ? URL.createObjectURL(src) : src;
     this._timestamp = new Date();
     this._filename = `${this._timestamp.toISOString()}.webm`;
   }
@@ -55,7 +53,7 @@ export class Recording {
     return this.url.startsWith('blob:');
   }
 
-  cloneWithNewFilename(newFilename: string): Recording{
+  cloneWithNewFilename(newFilename: string): Recording {
     const clone = new Recording(this.url);
     clone._filename = newFilename;
     return clone;
@@ -84,7 +82,12 @@ interface RecordingItemProps {
   onPlayRecording<T>(recording: Recording, event: React.MouseEvent<T>): void;
 }
 
-function RecordingItem({ recording, onEditRecording, onDeleteRecording, onPlayRecording }: RecordingItemProps) {
+function RecordingItem({
+  recording,
+  onEditRecording,
+  onDeleteRecording,
+  onPlayRecording,
+}: RecordingItemProps) {
   const [editing, setEditing] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -130,7 +133,10 @@ function RecordingItem({ recording, onEditRecording, onDeleteRecording, onPlayRe
       {editing ? (
         <input defaultValue={recording.filename} ref={inputRef} />
       ) : (
-        <a href={recording.url} download={recording.filename} title={recording.timestamp.toLocaleString()}>
+        <a
+          href={recording.url}
+          download={recording.filename}
+          title={recording.timestamp.toLocaleString()}>
           <DownloadIcon role="presentation" /> Download recording
         </a>
       )}
@@ -186,14 +192,15 @@ export default function RecordingsList({
 }: RecordingsListProps) {
   useEffect(() => {
     function handleBeforeUnload(event: BeforeUnloadEvent) {
-      if (recordings.filter(recording => recording.isUnsaved()).length) {
+      if (recordings.filter((recording) => recording.isUnsaved()).length) {
         // TODO: Figure out a way to visually point to the unsaved recordings
         // `setState` can be called but since it works asynchronously, the
         // `className` isn't affected _after_ the browser's modal is dismissed
         // Saving a `ref` to the element and adding the class imperatively
         // also doesn't work, not sure why...
         event.preventDefault();
-        event.returnValue = 'There are still some unsaved recordings; if you close this page or navigate away they won\'t be available anymore. Are you sure you want to continue?';
+        event.returnValue =
+          "There are still some unsaved recordings; if you close this page or navigate away they won't be available anymore. Are you sure you want to continue?";
         return event.returnValue;
       }
     }
