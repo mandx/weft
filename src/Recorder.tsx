@@ -1,10 +1,10 @@
 import React, {
   MutableRefObject,
   ReactNode,
-  useState,
-  useRef,
-  useEffect,
   useCallback,
+  useEffect,
+  useRef,
+  useState,
 } from 'react';
 
 import { SKIP_RECORDER_RENDER_LOOP } from './config';
@@ -16,8 +16,10 @@ import RecordOptions, {
   qualityToResolution,
   DEFAULT_RESOLUTION,
 } from './RecordOptions';
-import { Recording } from './RecordingsList';
+import Recording from './Recording';
 import { NotificationLevel } from './Notifications';
+
+export const EMPTY_IMAGE = 'data:image/bmp;base64,Qk0eAAAAAAAAABoAAAAMAAAAAQABAAEAGAAAAP8A';
 
 const HIDDEN: React.CSSProperties = { display: 'none ' };
 
@@ -42,12 +44,17 @@ export default function Recorder({
   emitNotification,
   onRecordingStateChange,
 }: RecorderProps) {
+  const thumbnailRef = useRef<string>(EMPTY_IMAGE);
   const imagePatternRef = useRef<HTMLImageElement>(null);
   const canvasPatternRef: MutableRefObject<CanvasPattern | null> = useRef(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const microphoneAudioRef = useRef<HTMLAudioElement>(null);
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
   const screenVideoRef = useRef<HTMLVideoElement>(null);
+
+  const screenStream: MutableRefObject<MediaStream | null> = useRef(null);
+  const cameraStream: MutableRefObject<MediaStream | null> = useRef(null);
+  const microphoneStream: MutableRefObject<MediaStream | null> = useRef(null);
 
   /** This needs to be kept in sync with the `recording` state variable */
   const recorderRef: MutableRefObject<MediaRecorderWrapper | null> = useRef(null);
@@ -214,7 +221,7 @@ export default function Recorder({
         console.log('Stopping recording');
         recorderRef.current = null;
         recorder.stop().then((blob) => {
-          onNewRecording(new Recording(blob));
+          onNewRecording(new Recording(blob, thumbnailRef.current));
         });
         setRecording(false);
         onRecordingStateChange('STOPPED');
@@ -228,6 +235,9 @@ export default function Recorder({
 
         const canvas = canvasRef.current;
         if (canvas) {
+          canvas.toBlob((blob) => {
+            thumbnailRef.current = URL.createObjectURL(blob);
+          });
           tracks.push(...canvas.captureStream(FRAMES_PER_SECOND).getTracks());
         }
 
@@ -242,31 +252,52 @@ export default function Recorder({
   );
 
   const deinitializeScreenStream = useCallback(function deinitializeScreenStreamCb() {
+    const recorderStream = recorderRef.current?.stream;
+
+    screenStream.current?.getTracks().forEach((track) => {
+      recorderStream?.removeTrack(track);
+      track.stop();
+    });
+
     const screenVideo = screenVideoRef.current;
-    if (screenVideo && screenVideo.srcObject instanceof MediaStream) {
-      const stream = screenVideo.srcObject;
+    if (screenVideo) {
+      screenVideo.src = '';
       screenVideo.srcObject = null;
-      stream.getTracks().forEach((track) => track.stop());
     }
   }, []);
 
   const deinitializeCameraStream = useCallback(function deinitializeCameraStreamCb() {
+    const recorderStream = recorderRef.current?.stream;
+    cameraStream.current?.getTracks().forEach((track) => {
+      recorderStream?.removeTrack(track);
+      track.stop();
+    });
+
     const cameraVideo = cameraVideoRef.current;
-    if (cameraVideo && cameraVideo.srcObject instanceof MediaStream) {
-      const stream = cameraVideo.srcObject;
+    if (cameraVideo) {
+      cameraVideo.src = '';
       cameraVideo.srcObject = null;
-      stream.getTracks().forEach((track) => track.stop());
     }
   }, []);
 
   const deinitializeMicrophoneStream = useCallback(function deinitializeMicrophoneStreamCb() {
-    // TODO: Safely save a reference to the microphone media stream;
-    //       so we can remove and stop the exact tracks added when we
-    //       obtained a microphone audio stream. Right now, we just remove
-    //       all audio tracks, since the only audio we request comes from
-    //       the system's microphone.
     const recorderStream = recorderRef.current?.stream;
-    recorderStream?.getAudioTracks().forEach((track) => {
+    microphoneStream.current?.getTracks().forEach((track) => {
+      recorderStream?.removeTrack(track);
+      track.stop();
+    });
+
+    const micAudio = microphoneAudioRef.current;
+    if (micAudio) {
+      micAudio.src = '';
+      micAudio.srcObject = null;
+    }
+  }, []);
+
+  const cleanupRecorder = useCallback(function cleanupRecorderCb() {
+    const recorderStream = recorderRef.current?.stream;
+    recorderStream?.getTracks().forEach((track) => {
+      console.warn('Track ', track.id, 'was not cleaned up...');
       recorderStream.removeTrack(track);
       track.stop();
     });
@@ -278,15 +309,17 @@ export default function Recorder({
         navigator.mediaDevices
           .getDisplayMedia({ video: true, audio: false })
           .then((stream) => {
+            screenStream.current = stream;
             setScreenAccess('ACTIVE');
             stream.addEventListener('inactive', function screenStreamEnded() {
+              screenStream.current = null;
               setScreenAccess('INACTIVE');
             });
 
-            const videoEl = screenVideoRef.current;
-            if (videoEl) {
-              videoEl.srcObject = stream;
-              videoEl.play();
+            const screenVideoEl = screenVideoRef.current;
+            if (screenVideoEl) {
+              screenVideoEl.srcObject = stream;
+              screenVideoEl.play();
             }
           })
           .catch((error) => {
@@ -313,15 +346,17 @@ export default function Recorder({
         navigator.mediaDevices
           .getUserMedia({ video: true, audio: false })
           .then((stream) => {
+            cameraStream.current = stream;
             setCameraAccess('ACTIVE');
             stream.addEventListener('inactive', function cameraStreamEnded() {
+              cameraStream.current = null;
               setCameraAccess('INACTIVE');
             });
 
-            const videoEl = cameraVideoRef.current;
-            if (videoEl) {
-              videoEl.srcObject = stream;
-              videoEl.play();
+            const cameraVideoEl = cameraVideoRef.current;
+            if (cameraVideoEl) {
+              cameraVideoEl.srcObject = stream;
+              cameraVideoEl.play();
             }
           })
           .catch((error) => {
@@ -345,8 +380,10 @@ export default function Recorder({
             audio: { echoCancellation: true, noiseSuppression: true },
           })
           .then((stream) => {
+            microphoneStream.current = stream;
             setMicrophoneAccess('ACTIVE');
             stream.addEventListener('inactive', function microphoneStreamEnded() {
+              microphoneStream.current = null;
               setMicrophoneAccess('INACTIVE');
 
               const recorder = recorderRef.current;
@@ -387,8 +424,14 @@ export default function Recorder({
       deinitializeScreenStream();
       deinitializeCameraStream();
       deinitializeMicrophoneStream();
+      cleanupRecorder();
     };
-  }, [deinitializeScreenStream, deinitializeCameraStream, deinitializeMicrophoneStream]);
+  }, [
+    deinitializeScreenStream,
+    deinitializeCameraStream,
+    deinitializeMicrophoneStream,
+    cleanupRecorder,
+  ]);
 
   return (
     <div className="recorder">

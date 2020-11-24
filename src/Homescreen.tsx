@@ -1,13 +1,13 @@
-import React, { Fragment, useEffect, useState, useRef, useCallback } from 'react';
+import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { ReactComponent as DownloadIcon } from 'bootstrap-icons/icons/download.svg';
 import { ReactComponent as PlayIcon } from 'bootstrap-icons/icons/play.svg';
 import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil.svg';
 import { ReactComponent as XCircleIcon } from 'bootstrap-icons/icons/x-circle.svg';
 import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash.svg';
 
+import './Homescreen.scss';
 import Recording from './Recording';
-
-import './RecordingsList.scss';
+import { Link } from './Router';
 
 interface RecordingItemProps {
   /**
@@ -31,7 +31,7 @@ interface RecordingItemProps {
   onPlayRecording<T>(recording: Recording, event: React.MouseEvent<T>): void;
 }
 
-function RecordingItem({
+function HomescreenItem({
   recording,
   onEditRecording,
   onDeleteRecording,
@@ -77,44 +77,59 @@ function RecordingItem({
   );
 
   return (
-    <form onSubmit={handleSubmit}>
-      {editing ? (
-        <input defaultValue={recording.filename} ref={inputRef} />
-      ) : (
-        <a
-          href={recording.url}
-          download={recording.filename}
-          title={recording.timestamp.toLocaleString()}>
-          <DownloadIcon role="presentation" /> Download recording
-        </a>
-      )}
-      {editing ? (
-        <Fragment>
-          <button type="submit">
-            <PencilIcon role="presentation" /> Save
-          </button>
-          <button type="button" onClick={cancelEditing}>
-            <XCircleIcon role="presentation" /> Cancel
-          </button>
-        </Fragment>
-      ) : (
-        <Fragment>
-          <button type="button" onClick={handlePlay}>
-            <PlayIcon role="presentation" /> Play
-          </button>
-          <button type="button" onClick={startEditing}>
-            <PencilIcon role="presentation" /> Rename
-          </button>
-        </Fragment>
-      )}
-      <button type="button" onClick={handleDelete}>
-        <TrashIcon role="presentation" /> Delete
-      </button>
-    </form>
+    <div className="homescreen-recording">
+      <div className="homescreen-recording-thumbnail-wrapper">
+        <img
+          className="homescreen-recording-thumbnail"
+          alt={recording.filename}
+          src={recording.thumbnailUrl}
+        />
+      </div>
+      <form onSubmit={handleSubmit} className="homescreen-recording-actions">
+        {editing ? (
+          <input
+            defaultValue={recording.filename}
+            ref={inputRef}
+            className="homescreen-item-name"
+          />
+        ) : (
+          <a
+            className="homescreen-item-name"
+            href={recording.url}
+            download={recording.filename}
+            title={`Download recording: ${recording.timestamp.toLocaleString()}`}
+            aria-label={`Download recording: ${recording.timestamp.toLocaleString()}`}>
+            <DownloadIcon role="presentation" /> Download
+          </a>
+        )}
+        {editing ? (
+          <Fragment>
+            <button type="submit" title="Save" aria-label="Save">
+              <PencilIcon role="presentation" />
+            </button>
+            <button type="button" onClick={cancelEditing} title="Cancel" aria-label="Cancel">
+              <XCircleIcon role="presentation" />
+            </button>
+          </Fragment>
+        ) : (
+          <Fragment>
+            <button type="button" onClick={handlePlay} title="Play" aria-label="Play">
+              <PlayIcon role="presentation" />
+            </button>
+            <button type="button" onClick={startEditing} title="Rename" aria-label="Rename">
+              <PencilIcon role="presentation" />
+            </button>
+          </Fragment>
+        )}
+        <button type="button" onClick={handleDelete} title="Delete" aria-label="Delete">
+          <TrashIcon role="presentation" />
+        </button>
+      </form>
+    </div>
   );
 }
 
-export interface RecordingsListProps {
+export interface HomescreenProps {
   /**
    * Array of items to display by the manager
    */
@@ -133,11 +148,11 @@ export interface RecordingsListProps {
   onPlayRecording: RecordingItemProps['onPlayRecording'];
 }
 
-export default function RecordingsList({
+export default function Homescreen({
   recordings,
   onEditRecordings,
   onPlayRecording,
-}: RecordingsListProps) {
+}: HomescreenProps) {
   useEffect(() => {
     function handleBeforeUnload(event: BeforeUnloadEvent) {
       if (recordings.filter((recording) => recording.isUnsaved()).length) {
@@ -160,30 +175,31 @@ export default function RecordingsList({
     };
   }, [recordings]);
 
-  if (!recordings.length) {
-    return null;
-  }
-
   return (
-    <ul className="recordings-list">
-      {recordings.map((recording, index) => (
-        <li key={recording.url}>
-          <RecordingItem
-            recording={recording}
-            onEditRecording={(edited) => {
-              const newList = recordings.slice();
-              newList.splice(index, 1, edited);
-              onEditRecordings(newList);
-            }}
-            onDeleteRecording={() => {
-              const newItems = recordings.slice();
-              newItems.splice(index, 1);
-              onEditRecordings(newItems);
-            }}
-            onPlayRecording={onPlayRecording}
-          />
-        </li>
-      ))}
-    </ul>
+    <section className="homescreen">
+      <Link to="/record" className="start-recording">
+        Start Recording
+      </Link>
+      <ul className="homescreen-recordings">
+        {recordings.map((recording, index) => (
+          <li key={recording.url} className="homescreen-item">
+            <HomescreenItem
+              recording={recording}
+              onEditRecording={(edited) => {
+                const newList = recordings.slice();
+                newList.splice(index, 1, edited);
+                onEditRecordings(newList);
+              }}
+              onDeleteRecording={() => {
+                const newItems = recordings.slice();
+                newItems.splice(index, 1);
+                onEditRecordings(newItems);
+              }}
+              onPlayRecording={onPlayRecording}
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
