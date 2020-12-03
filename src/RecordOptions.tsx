@@ -48,47 +48,47 @@ export interface RecordingOptionsProps {
   /**
    * Selected quality setting
    */
-  quality?: Quality;
+  readonly quality?: Quality;
   /**
    * Callback triggered when a new quality setting is selected
    */
-  onChangeQuality?: (quality: Quality) => void;
+  readonly onChangeQuality?: (quality: Quality) => void;
 
   /**
    * Access status of the screen stream
    */
-  screenAccess?: MediaAccess;
+  readonly screenAccess?: MediaAccess;
   /**
    * Callback triggered access to the screen is requested or deactivated
    */
-  requestScreenAccess?: (access: MediaAccess) => void;
+  readonly requestScreenAccess?: (access: MediaAccess) => void;
 
   /**
    * Access status of the camera stream
    */
-  cameraAccess?: MediaAccess;
+  readonly cameraAccess?: MediaAccess;
   /**
    * Callback triggered access to the camera is requested or deactivated
    */
-  requestCameraAccess?: (access: MediaAccess) => void;
+  readonly requestCameraAccess?: (access: MediaAccess) => void;
 
   /**
    * Access status of the microphone stream
    */
-  microphoneAccess?: MediaAccess;
+  readonly microphoneAccess?: MediaAccess;
   /**
    * Callback triggered access to the microphone is requested or deactivated
    */
-  requestMicrophoneAccess?: (access: MediaAccess) => void;
+  readonly requestMicrophoneAccess?: (access: MediaAccess) => void;
 
   /**
    * Indicates if recording is in progress or not
    */
-  recording?: boolean;
+  readonly recording?: boolean;
   /**
    * Callback triggered when recording is to be started or stopped
    */
-  toggleRecording?: () => void;
+  readonly toggleRecording?: () => void;
 }
 
 function negate(b: boolean): boolean {

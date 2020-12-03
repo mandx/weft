@@ -6,25 +6,25 @@ import './Modal.scss';
 type CloseIntent = 'EscapeKey' | 'BackdropClick';
 
 interface ModalProps {
-  className?: string;
+  readonly className?: string;
   /**
    * Content to render inside the Modal
    */
-  children?: ReactNode;
+  readonly children?: ReactNode;
   /**
    * DOM element to use as the Portal root
    */
-  container: Element;
+  readonly container: Element;
   /**
    * Setting this to false makes the component render `null`
    */
-  open?: boolean;
+  readonly open?: boolean;
   /**
    * Callback triggered with a close intent from the user
    *
    * @param intent - The intent used
    */
-  onClose?: (intent: CloseIntent) => void;
+  readonly onClose?: (intent: CloseIntent) => void;
 }
 
 export default function Modal({ className, children, container, open, onClose }: ModalProps) {

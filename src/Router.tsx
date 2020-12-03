@@ -42,8 +42,8 @@ function isFallbackElement(
 }
 
 export interface RouterProps {
-  history: ReturnType<typeof createHistory>;
-  children: React.ReactNode;
+  readonly history: ReturnType<typeof createHistory>;
+  readonly children: React.ReactNode;
 }
 
 export function Router({ history, children }: RouterProps) {
@@ -97,9 +97,9 @@ export function Router({ history, children }: RouterProps) {
 }
 
 interface LinkProps {
-  to: string;
-  className?: string;
-  children?: ReactNode;
+  readonly to: string;
+  readonly className?: string;
+  readonly children?: ReactNode;
 }
 
 export function Link({ to, children, className }: LinkProps) {
@@ -127,8 +127,8 @@ export function Link({ to, children, className }: LinkProps) {
 }
 
 interface RouteProps {
-  path: string;
-  children?: ReactNode;
+  readonly path: string;
+  readonly children?: ReactNode;
 }
 
 export function Route(props: RouteProps) {
@@ -136,7 +136,7 @@ export function Route(props: RouteProps) {
 }
 
 interface SwitchProps {
-  children?: ReactNode;
+  readonly children?: ReactNode;
 }
 
 export function Switch(props: SwitchProps) {
@@ -144,7 +144,7 @@ export function Switch(props: SwitchProps) {
 }
 
 interface FallbackProps {
-  children?: ReactNode;
+  readonly children?: ReactNode;
 }
 
 export function Fallback(props: FallbackProps) {

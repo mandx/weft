@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import React, { Fragment, useCallback, /*useEffect,*/ useRef, useState } from 'react';
 import { ReactComponent as DownloadIcon } from 'bootstrap-icons/icons/download.svg';
 import { ReactComponent as PlayIcon } from 'bootstrap-icons/icons/play.svg';
 import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil.svg';
@@ -7,28 +7,29 @@ import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash.svg';
 
 import './Homescreen.scss';
 import Recording from './Recording';
+import StorageEstimateBar from './StorageEstimateBar';
 import { Link } from './Router';
 
 interface RecordingItemProps {
   /**
    * The item this element represents
    */
-  recording: Recording;
+  readonly recording: Recording;
 
   /**
    * Callback triggered with a new "version" of this item.
    */
-  onEditRecording(recording: Recording): void;
+  readonly onEditRecording: (recording: Recording) => void;
 
   /**
    * Callback triggered when deletion of this item is requested
    */
-  onDeleteRecording<T>(recording: Recording, event: React.MouseEvent<T>): void;
+  readonly onDeleteRecording: <T>(recording: Recording, event: React.MouseEvent<T>) => void;
 
   /**
    * Callback triggered when playback of this item is requested.
    */
-  onPlayRecording<T>(recording: Recording, event: React.MouseEvent<T>): void;
+  readonly onPlayRecording: <T>(recording: Recording, event: React.MouseEvent<T>) => void;
 }
 
 function HomescreenItem({
@@ -133,53 +134,57 @@ export interface HomescreenProps {
   /**
    * Array of items to display by the manager
    */
-  recordings: Recording[];
+  readonly recordings: readonly Recording[];
 
   /**
    * Callback triggered when a modified version of the items list is ready.
    * Any type of modification (item deletion or edits) will come as a new list
    * entirely.
    */
-  onEditRecordings(items: Recording[]): void;
+  readonly onEditRecordings: (items: readonly Recording[]) => void;
 
   /**
    * Callback triggered when playback of an item is requested.
    */
-  onPlayRecording: RecordingItemProps['onPlayRecording'];
+  readonly onPlayRecording: RecordingItemProps['onPlayRecording'];
+
+  readonly storageEstimate?: Readonly<StorageEstimate>;
 }
 
 export default function Homescreen({
   recordings,
   onEditRecordings,
   onPlayRecording,
+  storageEstimate,
 }: HomescreenProps) {
-  useEffect(() => {
-    function handleBeforeUnload(event: BeforeUnloadEvent) {
-      if (recordings.filter((recording) => recording.isUnsaved()).length) {
-        // TODO: Figure out a way to visually point to the unsaved recordings
-        // `setState` can be called but since it works asynchronously, the
-        // `className` isn't affected _after_ the browser's modal is dismissed
-        // Saving a `ref` to the element and adding the class imperatively
-        // also doesn't work, not sure why...
-        event.preventDefault();
-        event.returnValue =
-          "There are still some unsaved recordings; if you close this page or navigate away they won't be available anymore. Are you sure you want to continue?";
-        return event.returnValue;
-      }
-    }
+  // useEffect(() => {
+  //   function handleBeforeUnload(event: BeforeUnloadEvent) {
+  //     if (recordings.filter((recording) => recording.isUnsaved()).length) {
+  //       // TODO: Figure out a way to visually point to the unsaved recordings
+  //       // `setState` can be called but since it works asynchronously, the
+  //       // `className` isn't affected _after_ the browser's modal is dismissed
+  //       // Saving a `ref` to the element and adding the class imperatively
+  //       // also doesn't work, not sure why...
+  //       event.preventDefault();
+  //       event.returnValue =
+  //         "There are still some unsaved recordings; if you close this page or navigate away they won't be available anymore. Are you sure you want to continue?";
+  //       return event.returnValue;
+  //     }
+  //   }
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+  //   window.addEventListener('beforeunload', handleBeforeUnload);
 
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [recordings]);
+  //   return () => {
+  //     window.removeEventListener('beforeunload', handleBeforeUnload);
+  //   };
+  // }, [recordings]);
 
   return (
     <section className="homescreen">
       <Link to="/record" className="start-recording">
         Start Recording
       </Link>
+      {!!storageEstimate && <StorageEstimateBar estimate={storageEstimate} />}
       <ul className="homescreen-recordings">
         {recordings.map((recording, index) => (
           <li key={recording.url} className="homescreen-item">

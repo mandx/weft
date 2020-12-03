@@ -1,11 +1,4 @@
-import React, {
-  MutableRefObject,
-  ReactNode,
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-} from 'react';
+import { MutableRefObject, ReactNode, useState, useRef, useEffect, useCallback } from 'react';
 
 import './Notifications.scss';
 
@@ -57,19 +50,19 @@ export function createNotificationsEmitter(): NotificationsEmitter {
 }
 
 interface NotificationsProps {
-  emitter: NotificationsEmitter;
+  readonly emitter: NotificationsEmitter;
 }
 
 export default function Notifications({ emitter }: NotificationsProps) {
-  const intervalIdRef: MutableRefObject<ReturnType<typeof setInterval> | null> = useRef(null);
-  const [contents, setContents] = useState<Array<[ReactNode, NotificationLevel, number]>>([]);
+  const intervalIdRef: MutableRefObject<ReturnType<typeof setInterval> | undefined> = useRef(undefined);
+  const [contents, setContents] = useState<readonly [ReactNode, NotificationLevel, number][]>([]);
 
   const intervalHandler = useCallback(() => {
     setContents((contents) => {
       if (contents.length === 1) {
         if (intervalIdRef.current) {
           clearInterval(intervalIdRef.current);
-          intervalIdRef.current = null;
+          intervalIdRef.current = undefined;
         }
       }
 
@@ -93,7 +86,7 @@ export default function Notifications({ emitter }: NotificationsProps) {
     return () => {
       if (intervalIdRef.current) {
         clearInterval(intervalIdRef.current);
-        intervalIdRef.current = null;
+        intervalIdRef.current = undefined;
       }
       emitter.off(handler);
     };

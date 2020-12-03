@@ -6,7 +6,7 @@ type AllPossibleRefTypes<T> = ((instance: T | null) => void) | MutableRefObject<
  * Maybe we don't need this and use `useImperativeHandle` instead...
  */
 export function useCombinedRefs<T>(
-  ...refs: (AllPossibleRefTypes<T> | null)[]
+  ...refs: readonly (AllPossibleRefTypes<T> | null)[]
 ): MutableRefObject<T | null> {
   const targetRef = useRef<T>(null);
 

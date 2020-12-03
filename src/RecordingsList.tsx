@@ -13,22 +13,22 @@ interface RecordingItemProps {
   /**
    * The item this element represents
    */
-  recording: Recording;
+  readonly recording: Recording;
 
   /**
    * Callback triggered with a new "version" of this item.
    */
-  onEditRecording(recording: Recording): void;
+  readonly onEditRecording: (recording: Recording) => void;
 
   /**
    * Callback triggered when deletion of this item is requested
    */
-  onDeleteRecording<T>(recording: Recording, event: React.MouseEvent<T>): void;
+  readonly onDeleteRecording: <T>(recording: Recording, event: React.MouseEvent<T>) => void;
 
   /**
    * Callback triggered when playback of this item is requested.
    */
-  onPlayRecording<T>(recording: Recording, event: React.MouseEvent<T>): void;
+  readonly onPlayRecording: <T>(recording: Recording, event: React.MouseEvent<T>) => void;
 }
 
 function RecordingItem({
@@ -118,19 +118,19 @@ export interface RecordingsListProps {
   /**
    * Array of items to display by the manager
    */
-  recordings: Recording[];
+  readonly recordings: readonly Recording[];
 
   /**
    * Callback triggered when a modified version of the items list is ready.
    * Any type of modification (item deletion or edits) will come as a new list
    * entirely.
    */
-  onEditRecordings(items: Recording[]): void;
+  readonly onEditRecordings: (items: readonly Recording[])=> void;
 
   /**
    * Callback triggered when playback of an item is requested.
    */
-  onPlayRecording: RecordingItemProps['onPlayRecording'];
+  readonly onPlayRecording: RecordingItemProps['onPlayRecording'];
 }
 
 export default function RecordingsList({
