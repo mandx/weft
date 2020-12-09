@@ -272,6 +272,7 @@ export default function Recorder({
   const deinitializeScreenStream = useCallback(function deinitializeScreenStreamCb() {
     const recorderStream = recorderRef.current?.stream;
 
+    screenStream.current?.removeEventListener('inactive', screenStreamEnded);
     screenStream.current?.getTracks().forEach((track) => {
       recorderStream?.removeTrack(track);
       track.stop();
@@ -286,6 +287,8 @@ export default function Recorder({
 
   const deinitializeCameraStream = useCallback(function deinitializeCameraStreamCb() {
     const recorderStream = recorderRef.current?.stream;
+
+    cameraStream.current?.removeEventListener('inactive', cameraStreamEnded);
     cameraStream.current?.getTracks().forEach((track) => {
       recorderStream?.removeTrack(track);
       track.stop();
@@ -300,6 +303,8 @@ export default function Recorder({
 
   const deinitializeMicrophoneStream = useCallback(function deinitializeMicrophoneStreamCb() {
     const recorderStream = recorderRef.current?.stream;
+
+    microphoneStream.current?.removeEventListener('inactive', microphoneStreamEnded);
     microphoneStream.current?.getTracks().forEach((track) => {
       recorderStream?.removeTrack(track);
       track.stop();
@@ -321,6 +326,11 @@ export default function Recorder({
     });
   }, []);
 
+  const screenStreamEnded = useCallback(function screenStreamEndedCb() {
+    screenStream.current = null;
+    setScreenAccess('INACTIVE');
+  }, []);
+
   const requestScreenAccess = useCallback(
     function requestScreenAccessCb(access: MediaAccess): void {
       if (access === 'ACTIVE') {
@@ -329,10 +339,7 @@ export default function Recorder({
           .then((stream) => {
             screenStream.current = stream;
             setScreenAccess('ACTIVE');
-            stream.addEventListener('inactive', function screenStreamEnded() {
-              screenStream.current = null;
-              setScreenAccess('INACTIVE');
-            });
+            stream.addEventListener('inactive', screenStreamEnded);
 
             const screenVideoEl = screenVideoRef.current;
             if (screenVideoEl) {
@@ -355,8 +362,13 @@ export default function Recorder({
         setScreenAccess('INACTIVE');
       }
     },
-    [deinitializeScreenStream, emitNotification]
+    [screenStreamEnded, deinitializeScreenStream, emitNotification]
   );
+
+  const cameraStreamEnded = useCallback(function cameraStreamEndedCb() {
+    cameraStream.current = null;
+    setCameraAccess('INACTIVE');
+  }, []);
 
   const requestCameraAccess = useCallback(
     function requestCameraAccessCb(access: MediaAccess): void {
@@ -366,10 +378,7 @@ export default function Recorder({
           .then((stream) => {
             cameraStream.current = stream;
             setCameraAccess('ACTIVE');
-            stream.addEventListener('inactive', function cameraStreamEnded() {
-              cameraStream.current = null;
-              setCameraAccess('INACTIVE');
-            });
+            stream.addEventListener('inactive', cameraStreamEnded);
 
             const cameraVideoEl = cameraVideoRef.current;
             if (cameraVideoEl) {
@@ -386,8 +395,13 @@ export default function Recorder({
         setCameraAccess('INACTIVE');
       }
     },
-    [deinitializeCameraStream]
+    [cameraStreamEnded, deinitializeCameraStream]
   );
+
+  const microphoneStreamEnded = useCallback(function microphoneStreamEndedCb() {
+    microphoneStream.current = null;
+    setMicrophoneAccess('INACTIVE');
+  }, []);
 
   const requestMicrophoneAccess = useCallback(
     function requestMicrophoneAccessCb(access: MediaAccess): void {
@@ -400,17 +414,7 @@ export default function Recorder({
           .then((stream) => {
             microphoneStream.current = stream;
             setMicrophoneAccess('ACTIVE');
-            stream.addEventListener('inactive', function microphoneStreamEnded() {
-              microphoneStream.current = null;
-              setMicrophoneAccess('INACTIVE');
-
-              const recorder = recorderRef.current;
-              if (recorder) {
-                stream.getTracks().forEach((track) => {
-                  recorder.stream.removeTrack(track);
-                });
-              }
-            });
+            stream.addEventListener('inactive', microphoneStreamEnded);
 
             const audioEl = microphoneAudioRef.current;
             if (audioEl) {
@@ -433,7 +437,7 @@ export default function Recorder({
         setMicrophoneAccess('INACTIVE');
       }
     },
-    [deinitializeMicrophoneStream]
+    [microphoneStreamEnded, deinitializeMicrophoneStream]
   );
 
   useEffect(() => {
