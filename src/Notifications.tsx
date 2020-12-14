@@ -54,7 +54,9 @@ interface NotificationsProps {
 }
 
 export default function Notifications({ emitter }: NotificationsProps) {
-  const intervalIdRef: MutableRefObject<ReturnType<typeof setInterval> | undefined> = useRef(undefined);
+  const intervalIdRef: MutableRefObject<ReturnType<typeof setInterval> | undefined> = useRef(
+    undefined
+  );
   const [contents, setContents] = useState<readonly [ReactNode, NotificationLevel, number][]>([]);
 
   const intervalHandler = useCallback(() => {
@@ -95,7 +97,7 @@ export default function Notifications({ emitter }: NotificationsProps) {
   return contents.length ? (
     <ul className="notifications-container">
       {contents.map(([content, level, key]) => (
-        <li key={key} className={`notifications notifications-${level}`}>
+        <li key={key} className={`notification notification-${level}`}>
           {content}
         </li>
       ))}

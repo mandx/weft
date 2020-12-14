@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState, useRef, useCallback } from 'react';
+import React, { Fragment, useState, useRef, useCallback } from 'react';
 import { ReactComponent as DownloadIcon } from 'bootstrap-icons/icons/download.svg';
 import { ReactComponent as PlayIcon } from 'bootstrap-icons/icons/play.svg';
 import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil.svg';
@@ -81,10 +81,7 @@ function RecordingItem({
       {editing ? (
         <input defaultValue={recording.filename} ref={inputRef} />
       ) : (
-        <a
-          href={recording.url}
-          download={recording.filename}
-          title={recording.timestamp.toLocaleString()}>
+        <a href={`#`} download={recording.filename} title={recording.timestamp.toLocaleString()}>
           <DownloadIcon role="presentation" /> Download recording
         </a>
       )}
@@ -125,7 +122,7 @@ export interface RecordingsListProps {
    * Any type of modification (item deletion or edits) will come as a new list
    * entirely.
    */
-  readonly onEditRecordings: (items: readonly Recording[])=> void;
+  readonly onEditRecordings: (items: readonly Recording[]) => void;
 
   /**
    * Callback triggered when playback of an item is requested.
@@ -138,27 +135,27 @@ export default function RecordingsList({
   onEditRecordings,
   onPlayRecording,
 }: RecordingsListProps) {
-  useEffect(() => {
-    function handleBeforeUnload(event: BeforeUnloadEvent) {
-      if (recordings.filter((recording) => recording.isUnsaved()).length) {
-        // TODO: Figure out a way to visually point to the unsaved recordings
-        // `setState` can be called but since it works asynchronously, the
-        // `className` isn't affected _after_ the browser's modal is dismissed
-        // Saving a `ref` to the element and adding the class imperatively
-        // also doesn't work, not sure why...
-        event.preventDefault();
-        event.returnValue =
-          "There are still some unsaved recordings; if you close this page or navigate away they won't be available anymore. Are you sure you want to continue?";
-        return event.returnValue;
-      }
-    }
+  // useEffect(() => {
+  //   function handleBeforeUnload(event: BeforeUnloadEvent) {
+  //     if (recordings.filter((recording) => recording.isUnsaved()).length) {
+  //       // TODO: Figure out a way to visually point to the unsaved recordings
+  //       // `setState` can be called but since it works asynchronously, the
+  //       // `className` isn't affected _after_ the browser's modal is dismissed
+  //       // Saving a `ref` to the element and adding the class imperatively
+  //       // also doesn't work, not sure why...
+  //       event.preventDefault();
+  //       event.returnValue =
+  //         "There are still some unsaved recordings; if you close this page or navigate away they won't be available anymore. Are you sure you want to continue?";
+  //       return event.returnValue;
+  //     }
+  //   }
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+  //   window.addEventListener('beforeunload', handleBeforeUnload);
 
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [recordings]);
+  //   return () => {
+  //     window.removeEventListener('beforeunload', handleBeforeUnload);
+  //   };
+  // }, [recordings]);
 
   if (!recordings.length) {
     return null;
@@ -167,7 +164,7 @@ export default function RecordingsList({
   return (
     <ul className="recordings-list">
       {recordings.map((recording, index) => (
-        <li key={recording.url}>
+        <li key={recording.databaseId}>
           <RecordingItem
             recording={recording}
             onEditRecording={(edited) => {

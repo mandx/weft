@@ -8,6 +8,7 @@ import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash.svg';
 import './Homescreen.scss';
 import Recording from './Recording';
 import StorageEstimateBar from './StorageEstimateBar';
+import DownloadRecordingBtn from './DownloadRecording';
 import { Link } from './Router';
 
 interface RecordingItemProps {
@@ -94,14 +95,21 @@ function HomescreenItem({
             className="homescreen-item-name"
           />
         ) : (
-          <a
+          // <a
+          //   className="homescreen-item-name"
+          //   href={'#'}
+          //   download={recording.filename}
+          //   title={`Download recording: ${recording.timestamp.toLocaleString()}`}
+          //   aria-label={`Download recording: ${recording.timestamp.toLocaleString()}`}>
+          //   <DownloadIcon role="presentation" /> Download
+          // </a>
+          <DownloadRecordingBtn
+            recording={recording}
             className="homescreen-item-name"
-            href={recording.url}
-            download={recording.filename}
             title={`Download recording: ${recording.timestamp.toLocaleString()}`}
             aria-label={`Download recording: ${recording.timestamp.toLocaleString()}`}>
             <DownloadIcon role="presentation" /> Download
-          </a>
+          </DownloadRecordingBtn>
         )}
         {editing ? (
           <Fragment>
@@ -114,6 +122,7 @@ function HomescreenItem({
           </Fragment>
         ) : (
           <Fragment>
+            {/* maybe use a <Router.Link/> instead? */}
             <button type="button" onClick={handlePlay} title="Play" aria-label="Play">
               <PlayIcon role="presentation" />
             </button>
@@ -187,7 +196,7 @@ export default function Homescreen({
       {!!storageEstimate && <StorageEstimateBar estimate={storageEstimate} />}
       <ul className="homescreen-recordings">
         {recordings.map((recording, index) => (
-          <li key={recording.url} className="homescreen-item">
+          <li key={recording.databaseId} className="homescreen-item">
             <HomescreenItem
               recording={recording}
               onEditRecording={(edited) => {

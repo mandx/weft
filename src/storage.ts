@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Dexie from 'dexie';
 
 import { useConstant } from './hooks';
-import Recording, { DatabaseID } from './Recording';
+import Recording, { BlobResolver, DatabaseID } from './Recording';
 
 export interface RecordingRow {
   readonly id: DatabaseID;
@@ -24,6 +24,24 @@ export class Database extends Dexie {
   }
 }
 
+function createDatabaseBlobResolver(
+  recordingsTable: Dexie.Table<RecordingRow, DatabaseID>,
+  rowId: DatabaseID
+): BlobResolver {
+  return function dbBlobResolver() {
+    return recordingsTable
+      .where({ ':id': rowId })
+      .toArray()
+      .then((items) => {
+        if (!items.length) {
+          throw new Error(`No items found for database ID «${rowId}»`);
+        }
+
+        return items[0].src;
+      });
+  };
+}
+
 function loadRecordings(
   recordingsTable: Dexie.Table<RecordingRow, DatabaseID>
 ): Promise<Recording[]> {
@@ -36,7 +54,7 @@ function loadRecordings(
         resolve(
           items.map(
             (item) =>
-              new Recording(item.src, item.thumbnail, {
+              new Recording(createDatabaseBlobResolver(recordingsTable, item.id), item.thumbnail, {
                 filename: item.filename,
                 databaseId: item.id,
               })
@@ -60,7 +78,7 @@ export function useRecordingsDB(): RecordingsDBHook {
   });
 
   const [cachedRecordings, setCachedRecordings] = useState<readonly Recording[]>([]);
-  const [storageEstimate, setStorageEstimate] = useState<Readonly<StorageEstimate> | undefined>()
+  const [storageEstimate, setStorageEstimate] = useState<Readonly<StorageEstimate> | undefined>();
 
   useEffect(() => {
     loadRecordings(database.recordings).then(setCachedRecordings);
@@ -73,8 +91,8 @@ export function useRecordingsDB(): RecordingsDBHook {
     add(recordings: readonly Recording[]) {
       return Promise.all(
         recordings.map((recording) =>
-          Promise.all([fetch(recording.url), fetch(recording.thumbnailUrl)])
-            .then(([srcRes, thumbRes]) => Promise.all([srcRes.blob(), thumbRes.blob()]))
+          fetch(recording.thumbnailUrl)
+            .then((thumbRes) => Promise.all([recording.getBlob(), thumbRes.blob()]))
             .then(([srcBlob, thumbBlob]) => ({
               id: recording.databaseId,
               src: srcBlob,

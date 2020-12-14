@@ -4,22 +4,41 @@ export type ObjURL = ReturnType<typeof URL.createObjectURL>;
 
 export type DatabaseID = ReturnType<typeof uuidv4>;
 
+export type BlobResolver = () => Promise<Blob>;
+
+function cloneBlob(blob: Blob): Blob {
+  return new Blob([blob], { type: blob.type });
+}
+
+/**
+ * Creates a Blob resolver from an existing blob. It will simply return
+ * Promises that resolve with the same given blob. This is specially useful
+ * when working with unsaved recordings, where the video data is still memory
+ * and not yet saved anywhere else.
+ */
+export function createMemoryBlobResolver(blob: Blob): BlobResolver {
+  const clone = cloneBlob(blob);
+  return function memoryBlobResolver() {
+    return Promise.resolve(cloneBlob(clone));
+  };
+}
+
 export default class Recording {
+  private _blobResolver: BlobResolver;
   private _databaseId: DatabaseID;
-  private _url: ObjURL;
   private _timestamp: Date;
   private _filename: string;
   private _thumbnailUrl: ObjURL;
 
   constructor(
-    src: Blob | ObjURL,
+    blobResolver: BlobResolver,
     thumbnail: Blob | ObjURL,
     options?: {
       filename?: string;
       databaseId?: DatabaseID;
     }
   ) {
-    this._url = src instanceof Blob ? URL.createObjectURL(src) : src;
+    this._blobResolver = blobResolver;
     this._thumbnailUrl = thumbnail instanceof Blob ? URL.createObjectURL(thumbnail) : thumbnail;
     this._timestamp = new Date();
     this._filename = options?.filename || `${this._timestamp.toISOString()}.webm`;
@@ -31,14 +50,18 @@ export default class Recording {
   }
 
   /**
-   * URL of the video to be played; it can be a Blob URL or an external URL
+   * Returns a Blob instance of the video data for this recording. The idea is
+   * that we don't want to load and keep around all the video data, eating all
+   * the browser's memory and possibly crashing the page. So, if some other
+   * component needs access to the video data, then it can request it using
+   * this method.
    */
-  get url(): ObjURL {
-    return this._url;
+  getBlob(): Promise<Blob> {
+    return this._blobResolver();
   }
 
   /**
-   * URL of the video to be played; it can be a Blob URL or an external URL
+   * Src URL of the recording's thumbnail
    */
   get thumbnailUrl(): ObjURL {
     return this._thumbnailUrl;
@@ -63,21 +86,14 @@ export default class Recording {
     this._filename = newFilename;
   }
 
-  /**
-   * Check if this is an unsaved URL (hasn't been uploaded)
-   */
-  isUnsaved(): boolean {
-    return this.url.startsWith('blob:');
-  }
-
   cloneWithNewFilename(newFilename: string): Recording {
-    return new Recording(this._url, this._thumbnailUrl, {
+    return new Recording(this._blobResolver, this._thumbnailUrl, {
       filename: newFilename,
     });
   }
 
   revokeURLs(): void {
-    URL.revokeObjectURL(this._url);
+    // URL.revokeObjectURL(this._url);
     URL.revokeObjectURL(this._thumbnailUrl);
   }
 }

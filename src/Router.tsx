@@ -8,6 +8,8 @@ import React, {
   useState,
 } from 'react';
 import { createBrowserHistory } from 'history';
+import { pathToRegexp, Key as RouteKey } from 'path-to-regexp';
+import { useConstant } from './hooks';
 
 function identity<T>(x: T): T {
   return x;
@@ -17,7 +19,36 @@ export function createHistory(): ReturnType<typeof createBrowserHistory> {
   return createBrowserHistory();
 }
 
+type StringParams = { [paramName: string]: string | undefined };
+
 const HistoryContext = createContext<ReturnType<typeof createHistory> | undefined>(undefined);
+const RouteParamsContext = createContext<StringParams | undefined>(undefined);
+
+class CompiledRoutesCache {
+  private innerCache: Map<string, { regexp: RegExp; keys: RouteKey[] }>;
+
+  constructor() {
+    this.innerCache = new Map();
+  }
+
+  get(route: string): { regexp: RegExp; keys: RouteKey[] } {
+    // NOTE: I think for now it's safe to return the reference to the cached
+    // objects here, as long as they are not exposed to the public API;
+    // components inspecting the routes parameters will just get a new mapping
+    // of `paramName` -> `paramValue`, which are all just immutable strings.
+
+    const cached = this.innerCache.get(route);
+    if (cached) {
+      return cached;
+    }
+
+    const keys: RouteKey[] = [];
+    const regexp = pathToRegexp(route, keys);
+    const result = { regexp, keys };
+    this.innerCache.set(route, result);
+    return result;
+  }
+}
 
 function isRouteElement(element: unknown): element is ReactElement<RouteProps, typeof Route> {
   return (
@@ -27,8 +58,24 @@ function isRouteElement(element: unknown): element is ReactElement<RouteProps, t
   );
 }
 
-function routeMatches(element: ReactElement<RouteProps, typeof Route>, path: string): boolean {
-  return element.props.path === path;
+function routeMatches(
+  element: ReactElement<RouteProps, typeof Route>,
+  path: string,
+  compiledRoutesCache: CompiledRoutesCache
+): StringParams | undefined {
+  const elemPath = element.props.path;
+  const compiled = compiledRoutesCache.get(elemPath);
+  const regexpMatch = compiled.regexp.exec(path);
+  if (!regexpMatch) {
+    return undefined;
+  }
+
+  return compiled.keys
+    .map((key, index): [string, string] => [`${key.name}`, regexpMatch[index + 1]])
+    .reduce((params, tuple) => {
+      params[tuple[0]] = tuple[1];
+      return params;
+    }, {} as StringParams);
 }
 
 function isSwitchElement(element: unknown): element is ReactElement<SwitchProps, typeof Switch> {
@@ -48,6 +95,7 @@ export interface RouterProps {
 
 export function Router({ history, children }: RouterProps) {
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
+  const compiledRoutesCache = useConstant<CompiledRoutesCache>(() => new CompiledRoutesCache());
 
   useEffect(() => {
     // `history.listen` returns an "unsubscribe" function, so we just
@@ -65,8 +113,14 @@ export function Router({ history, children }: RouterProps) {
     <HistoryContext.Provider value={history}>
       {Children.map(children, (child) => {
         if (isRouteElement(child)) {
-          if (!routeMatches(child, currentPath)) {
-            return null;
+          const routeParams = routeMatches(child, currentPath, compiledRoutesCache);
+          if (routeParams) {
+            const routeChildren = child.props.children;
+            return (
+              <RouteParamsContext.Provider value={routeParams}>
+                {typeof routeChildren === 'function' ? routeChildren(routeParams) : routeChildren}
+              </RouteParamsContext.Provider>
+            );
           }
         }
 
@@ -74,8 +128,15 @@ export function Router({ history, children }: RouterProps) {
           let fallback;
 
           for (const switchChild of Children.map(child.props.children, identity) || []) {
-            if (isRouteElement(switchChild) && routeMatches(switchChild, currentPath)) {
-              return switchChild;
+            if (isRouteElement(switchChild)) {
+              const routeParams = routeMatches(switchChild, currentPath, compiledRoutesCache);
+              if (routeParams) {
+                return (
+                  <RouteParamsContext.Provider value={routeParams}>
+                    {switchChild}
+                  </RouteParamsContext.Provider>
+                );
+              }
             }
 
             if (
@@ -126,9 +187,10 @@ export function Link({ to, children, className }: LinkProps) {
   );
 }
 
+type RouteMatchRenderer = (params: StringParams) => JSX.Element;
 interface RouteProps {
   readonly path: string;
-  readonly children?: ReactNode;
+  readonly children?: ReactNode | RouteMatchRenderer;
 }
 
 export function Route(props: RouteProps) {
@@ -136,7 +198,7 @@ export function Route(props: RouteProps) {
 }
 
 interface SwitchProps {
-  readonly children?: ReactNode;
+  readonly children?: ReactNode | RouteMatchRenderer;
 }
 
 export function Switch(props: SwitchProps) {
@@ -152,7 +214,9 @@ export function Fallback(props: FallbackProps) {
 }
 
 export function useHistory() {
-  const history = useContext(HistoryContext);
-  console.log('history', history);
-  return history;
+  return useContext(HistoryContext);
+}
+
+export function useRouteParams(): StringParams | undefined {
+  return useContext(RouteParamsContext);
 }

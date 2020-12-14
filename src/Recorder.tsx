@@ -16,7 +16,7 @@ import RecordOptions, {
   qualityToResolution,
   DEFAULT_RESOLUTION,
 } from './RecordOptions';
-import Recording from './Recording';
+import Recording, { createMemoryBlobResolver } from './Recording';
 import { NotificationLevel } from './Notifications';
 
 export const EMPTY_IMAGE =
@@ -112,7 +112,12 @@ export default function Recorder({
 
           const imagePattern = imagePatternRef.current;
           if (imagePattern) {
-            const coverCoords = imageCoverCoordinates(imagePattern.naturalWidth,imagePattern.naturalHeight, canvasWidth, canvasHeight);
+            const coverCoords = imageCoverCoordinates(
+              imagePattern.naturalWidth,
+              imagePattern.naturalHeight,
+              canvasWidth,
+              canvasHeight
+            );
             context.drawImage(
               imagePattern,
               coverCoords.offsetLeft,
@@ -239,7 +244,7 @@ export default function Recorder({
         console.log('Stopping recording');
         recorderRef.current = null;
         recorder.stop().then((blob) => {
-          onNewRecording(new Recording(blob, thumbnailRef.current));
+          onNewRecording(new Recording(createMemoryBlobResolver(blob), thumbnailRef.current));
         });
         setRecording(false);
         onRecordingStateChange('STOPPED');
@@ -269,53 +274,77 @@ export default function Recorder({
     [microphoneAccess, onNewRecording, onRecordingStateChange]
   );
 
-  const deinitializeScreenStream = useCallback(function deinitializeScreenStreamCb() {
-    const recorderStream = recorderRef.current?.stream;
-
-    screenStream.current?.removeEventListener('inactive', screenStreamEnded);
-    screenStream.current?.getTracks().forEach((track) => {
-      recorderStream?.removeTrack(track);
-      track.stop();
-    });
-
-    const screenVideo = screenVideoRef.current;
-    if (screenVideo) {
-      screenVideo.src = '';
-      screenVideo.srcObject = null;
-    }
+  const screenStreamEnded = useCallback(function screenStreamEndedCb() {
+    screenStream.current = null;
+    setScreenAccess('INACTIVE');
   }, []);
 
-  const deinitializeCameraStream = useCallback(function deinitializeCameraStreamCb() {
-    const recorderStream = recorderRef.current?.stream;
+  const deinitializeScreenStream = useCallback(
+    function deinitializeScreenStreamCb() {
+      const recorderStream = recorderRef.current?.stream;
 
-    cameraStream.current?.removeEventListener('inactive', cameraStreamEnded);
-    cameraStream.current?.getTracks().forEach((track) => {
-      recorderStream?.removeTrack(track);
-      track.stop();
-    });
+      screenStream.current?.removeEventListener('inactive', screenStreamEnded);
+      screenStream.current?.getTracks().forEach((track) => {
+        recorderStream?.removeTrack(track);
+        track.stop();
+      });
 
-    const cameraVideo = cameraVideoRef.current;
-    if (cameraVideo) {
-      cameraVideo.src = '';
-      cameraVideo.srcObject = null;
-    }
+      const screenVideo = screenVideoRef.current;
+      if (screenVideo) {
+        screenVideo.src = '';
+        screenVideo.srcObject = null;
+      }
+    },
+    [screenStreamEnded]
+  );
+
+  const cameraStreamEnded = useCallback(function cameraStreamEndedCb() {
+    cameraStream.current = null;
+    setCameraAccess('INACTIVE');
   }, []);
 
-  const deinitializeMicrophoneStream = useCallback(function deinitializeMicrophoneStreamCb() {
-    const recorderStream = recorderRef.current?.stream;
+  const deinitializeCameraStream = useCallback(
+    function deinitializeCameraStreamCb() {
+      const recorderStream = recorderRef.current?.stream;
 
-    microphoneStream.current?.removeEventListener('inactive', microphoneStreamEnded);
-    microphoneStream.current?.getTracks().forEach((track) => {
-      recorderStream?.removeTrack(track);
-      track.stop();
-    });
+      cameraStream.current?.removeEventListener('inactive', cameraStreamEnded);
+      cameraStream.current?.getTracks().forEach((track) => {
+        recorderStream?.removeTrack(track);
+        track.stop();
+      });
 
-    const micAudio = microphoneAudioRef.current;
-    if (micAudio) {
-      micAudio.src = '';
-      micAudio.srcObject = null;
-    }
+      const cameraVideo = cameraVideoRef.current;
+      if (cameraVideo) {
+        cameraVideo.src = '';
+        cameraVideo.srcObject = null;
+      }
+    },
+    [cameraStreamEnded]
+  );
+
+  const microphoneStreamEnded = useCallback(function microphoneStreamEndedCb() {
+    microphoneStream.current = null;
+    setMicrophoneAccess('INACTIVE');
   }, []);
+
+  const deinitializeMicrophoneStream = useCallback(
+    function deinitializeMicrophoneStreamCb() {
+      const recorderStream = recorderRef.current?.stream;
+
+      microphoneStream.current?.removeEventListener('inactive', microphoneStreamEnded);
+      microphoneStream.current?.getTracks().forEach((track) => {
+        recorderStream?.removeTrack(track);
+        track.stop();
+      });
+
+      const micAudio = microphoneAudioRef.current;
+      if (micAudio) {
+        micAudio.src = '';
+        micAudio.srcObject = null;
+      }
+    },
+    [microphoneStreamEnded]
+  );
 
   const cleanupRecorder = useCallback(function cleanupRecorderCb() {
     const recorderStream = recorderRef.current?.stream;
@@ -324,11 +353,6 @@ export default function Recorder({
       recorderStream.removeTrack(track);
       track.stop();
     });
-  }, []);
-
-  const screenStreamEnded = useCallback(function screenStreamEndedCb() {
-    screenStream.current = null;
-    setScreenAccess('INACTIVE');
   }, []);
 
   const requestScreenAccess = useCallback(
@@ -365,11 +389,6 @@ export default function Recorder({
     [screenStreamEnded, deinitializeScreenStream, emitNotification]
   );
 
-  const cameraStreamEnded = useCallback(function cameraStreamEndedCb() {
-    cameraStream.current = null;
-    setCameraAccess('INACTIVE');
-  }, []);
-
   const requestCameraAccess = useCallback(
     function requestCameraAccessCb(access: MediaAccess): void {
       if (access === 'ACTIVE') {
@@ -397,11 +416,6 @@ export default function Recorder({
     },
     [cameraStreamEnded, deinitializeCameraStream]
   );
-
-  const microphoneStreamEnded = useCallback(function microphoneStreamEndedCb() {
-    microphoneStream.current = null;
-    setMicrophoneAccess('INACTIVE');
-  }, []);
 
   const requestMicrophoneAccess = useCallback(
     function requestMicrophoneAccessCb(access: MediaAccess): void {

@@ -6,9 +6,11 @@ export interface StorageEstimateBarProps {
 }
 
 export default function StorageEstimateBar({ className, estimate }: StorageEstimateBarProps) {
-  return <meter className={`storage-estimate-bar ${className || ''}`}
-  min={0}
-  max={estimate.quota}
-  value={estimate.usage}
-  ></meter>;
+  return (
+    <meter
+      className={`storage-estimate-bar ${className || ''}`}
+      min={0}
+      max={estimate.quota}
+      value={estimate.usage}></meter>
+  );
 }

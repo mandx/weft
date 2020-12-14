@@ -8,6 +8,7 @@ import Notifications, { createNotificationsEmitter } from './Notifications';
 import { useConstant } from './hooks';
 import { createHistory, Fallback, Link, Route, Router, Switch } from './Router';
 import { useRecordingsDB } from './storage';
+import RecordingPlayer from './RecordingPlayer';
 
 function noop() {}
 
@@ -79,12 +80,19 @@ export default function App() {
     Object.assign(window, { emitNotification: notificationsEmitter.emit });
   }, [notificationsEmitter.emit]);
 
+  const onPlayRecording = useCallback(
+    function handlePlayRecording(recording: Recording): void {
+      history.push(`/play/${recording.databaseId}`);
+    },
+    [history]
+  );
+
   return (
     <Router history={history}>
       <nav className="main-nav">
         <header className="main-header">
           <h1>
-            <Link to="/" className="start-recording">
+            <Link to="/" className="start-page-link">
               Weft
             </Link>
           </h1>
@@ -98,14 +106,16 @@ export default function App() {
             onRecordingStateChange={noop}
           />
         </Route>
-        <Route path="/play/:url">
-          <video className="preview-video-player" controls />
+        <Route path="/play/:recordingId">
+          {/* TODO: Allow passing a render function with the route params */}
+          {/* <video className="preview-video-player" controls /> */}
+          <RecordingPlayer />
         </Route>
         <Fallback>
           <Homescreen
             recordings={recordings}
             onEditRecordings={setRecordingsList}
-            onPlayRecording={noop}
+            onPlayRecording={onPlayRecording}
             storageEstimate={storageEstimate}
           />
         </Fallback>
@@ -114,3 +124,40 @@ export default function App() {
     </Router>
   );
 }
+
+// const backgrounds = [];
+// const cssProps = [
+//   'background',
+//   'backgroundAttachment',
+//   'backgroundBlendMode',
+//   'backgroundClip',
+//   'backgroundColor',
+//   'backgroundImage',
+//   'backgroundOrigin',
+//   'backgroundPosition',
+//   'backgroundRepeat',
+//   'backgroundSize',
+// ];
+// const btns = Array.from(document.querySelectorAll('#stage .box a.button'));
+// function previewBackground() {
+//   const btn = btns.shift();
+//   if (!btn || !(btn instanceof HTMLElement)) {
+//     return;
+//   }
+
+//   btn.click();
+
+//   setTimeout(() => {
+//     const styles = cssProps.reduce((styles, cssProp) => {
+//       const cssValue = document.body.style[cssProp];
+//       if (cssValue) {
+//         styles[cssProp] = cssValue;
+//       }
+//       return styles;
+//     }, {});
+//     backgrounds.push(styles);
+//   });
+//   setTimeout(previewBackground, 1000);
+// }
+
+// previewBackground();
