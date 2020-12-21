@@ -46,10 +46,8 @@ export default function RecordingSearch({ recordings, ...props }: RecordingSearc
           <strong>Your most recent recordings:</strong>
           <ul className="recordings-list-compact">
             {recordings.map((recording) => (
-              <li  key={recording.databaseId}>
-                <Link to={`/play/${recording.databaseId}`}>
-                  {recording.filename}
-                </Link>
+              <li key={recording.databaseId}>
+                <Link to={`/play/${recording.databaseId}`}>{recording.filename}</Link>
               </li>
             ))}
           </ul>
@@ -59,10 +57,8 @@ export default function RecordingSearch({ recordings, ...props }: RecordingSearc
         (filteredRecordings.length ? (
           <ul className="recordings-list-compact">
             {filteredRecordings.map((recording) => (
-              <li  key={recording.databaseId}>
-                <Link to={`/play/${recording.databaseId}`}>
-                  {recording.filename}
-                </Link>
+              <li key={recording.databaseId}>
+                <Link to={`/play/${recording.databaseId}`}>{recording.filename}</Link>
               </li>
             ))}
           </ul>

@@ -45,9 +45,6 @@ export default function Recorder({
   emitNotification,
   onRecordingStateChange,
 }: RecorderProps) {
-  const thumbnailRef = useRef<string>(EMPTY_IMAGE);
-  const imagePatternRef = useRef<HTMLImageElement>(null);
-  // const canvasPatternRef: MutableRefObject<CanvasPattern | null> = useRef(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const microphoneAudioRef = useRef<HTMLAudioElement>(null);
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
@@ -70,6 +67,9 @@ export default function Recorder({
 
   const [resolutionWidth, resolutionHeight] = qualityToResolution(quality, DEFAULT_RESOLUTION);
 
+  // const canvasPatternRef: MutableRefObject<CanvasPattern | null> = useRef(null);
+  const thumbnailRef = useRef<string>(EMPTY_IMAGE);
+  const imagePatternRef = useRef<HTMLImageElement>(null);
   // requestAnimationFrame loop state
   const frameRequestContinue: MutableRefObject<boolean> = useRef(true);
   const lastFrameTimestamp: MutableRefObject<ReturnType<typeof performance.now>> = useRef(0);

@@ -77,4 +77,24 @@
       }
     }
   }
+
+  .about-page-link {
+    display: flex;
+    align-items: center;
+    border-radius: 0.5em;
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: 1em;
+
+    &,
+    &:active,
+    &:hover,
+    &:visited,
+    &:focus {
+      color: black;
+    }
+
+    & > svg {
+      margin-inline-end: 0.5em;
+    }
+  }
 }

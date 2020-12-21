@@ -9,6 +9,7 @@ import { useConstant } from './hooks';
 import { createHistory, Fallback, Link, Route, Router, Switch } from './Router';
 import { useRecordingsDB } from './storage';
 import RecordingPlayer from './RecordingPlayer';
+import AboutPage from './AboutPage';
 
 function noop() {}
 
@@ -110,6 +111,9 @@ export default function App() {
           {/* TODO: Allow passing a render function with the route params */}
           {/* <video className="preview-video-player" controls /> */}
           <RecordingPlayer />
+        </Route>
+        <Route path="/about">
+          <AboutPage />
         </Route>
         <Fallback>
           <Homescreen

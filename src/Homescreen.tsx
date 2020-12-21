@@ -4,6 +4,7 @@ import { ReactComponent as PlayIcon } from 'bootstrap-icons/icons/play.svg';
 import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil.svg';
 import { ReactComponent as XCircleIcon } from 'bootstrap-icons/icons/x-circle.svg';
 import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash.svg';
+import { ReactComponent as EmojiLaughingIcon } from 'bootstrap-icons/icons/emoji-laughing.svg';
 
 import './Homescreen.scss';
 import Recording from './Recording';
@@ -214,6 +215,10 @@ export default function Homescreen({
           </li>
         ))}
       </ul>
+      <Link className="about-page-link" to="/about">
+        <EmojiLaughingIcon />
+        About Weft
+      </Link>
     </section>
   );
 }
