@@ -15,19 +15,16 @@
   .start-recording {
     font-size: 3em;
     text-shadow: 1px 1px 3px silver;
-
     align-self: stretch;
     text-align: center;
-    padding-bottom: 0.5em;
     margin-bottom: 0.5em;
-    border-bottom: 1px solid silver;
   }
 
   .homescreen-item {
     margin: 10px;
     display: block;
-    width: 20vw;
-    height: 20vw;
+    width: 20rem;
+    height: 20rem;
   }
 
   .homescreen-recordings {
@@ -44,7 +41,6 @@
     box-sizing: border-box;
     height: 100%;
     padding: 5px;
-    width: 100%;
 
     display: flex;
     flex-direction: column;
