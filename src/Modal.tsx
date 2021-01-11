@@ -1,6 +1,7 @@
 import React, { ReactNode, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
+import { classnames } from './utilities';
 import './Modal.scss';
 
 type CloseIntent = 'EscapeKey' | 'BackdropClick';
@@ -65,7 +66,7 @@ export default function Modal({ className, children, container, open, onClose }:
       onKeyDown={keyboardClose}
       tabIndex={-1}>
       <div className="modal-dialog-backdrop" aria-hidden onClick={clickClose}></div>
-      <div className={`modal-dialog-content ${className || ''}`}>{children}</div>
+      <div className={classnames('modal-dialog-content', className)}>{children}</div>
     </div>,
     container
   );

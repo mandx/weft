@@ -7,6 +7,7 @@ import { ReactComponent as WindowIcon } from 'bootstrap-icons/icons/window.svg';
 import { ReactComponent as CameraVideoIcon } from 'bootstrap-icons/icons/camera-video.svg';
 import { ReactComponent as MicIcon } from 'bootstrap-icons/icons/mic.svg';
 
+import { classnames } from './utilities';
 import FullscreenToggle from './FullscreenToggle';
 import './RecordOptions.scss';
 
@@ -144,7 +145,7 @@ export default function RecordOptions({
           )}
           {recording ? 'Stop recording' : 'Start recording'}
         </button>
-        <div className={`recording-options-container ${expanded ? 'expanded' : ''}`}>
+        <div className={classnames('recording-options-container', expanded && 'expanded')}>
           <button className="recording-options" title="Recording options" onClick={optionsClicked}>
             {expanded ? <GearIcon role="presentation" /> : <GearFillIcon role="presentation" />}
             Options

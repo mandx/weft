@@ -163,21 +163,17 @@ interface LinkProps {
   readonly children?: ReactNode;
 }
 
-export function Link({ to, children, className }: LinkProps) {
+export function Link({ to, children, ...props }: LinkProps) {
   return (
     <HistoryContext.Consumer>
       {(history) => (
         <a
-          className={className}
+          {...props}
           href={to}
           onClick={(event) => {
             if (history) {
               event.preventDefault();
               history.push(to);
-            } else {
-              console.warn(
-                `\`Link\`{to:"${to}"} rendered without a \`history\`; not intercepting navigation.`
-              );
             }
           }}>
           {children}

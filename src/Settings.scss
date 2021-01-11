@@ -1,0 +1,73 @@
+.settings-page {
+  max-height: calc(100vh - 10rem);
+  min-width: calc(100vw - 10rem);
+  display: flex;
+  flex-direction: column;
+
+  .scroll-container {
+    overflow-y: auto;
+  }
+
+  details {
+    border: 1px solid white;
+    padding: 0.5rem;
+
+    summary {
+      outline-offset: 0.25rem;
+      outline-color: #00aaff;
+    }
+
+    &[open] summary {
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  .backgrounds-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    display: grid;
+    grid-gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
+    li {
+      width: 13rem;
+      height: 10rem;
+      border: 1px solid white;
+      box-sizing: border-box;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      overflow: hidden;
+
+      button {
+        display: none;
+      }
+
+      .background-name {
+        display: block;
+        padding: 1em;
+        text-align: center;
+        color: black;
+        font-size: 1.5em;
+        text-shadow: -1px -1px 2px white, 1px -1px 2px white, -1px 1px 2px white, 1px 1px 2px white;
+      }
+
+      &:hover,
+      &:focus,
+      &:focus-within {
+        .background-name {
+          display: none;
+        }
+
+        button {
+          display: block;
+        }
+      }
+    }
+  }
+}

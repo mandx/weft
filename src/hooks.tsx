@@ -78,3 +78,24 @@ export function useDebouncedValue<T>(value: T, delay: number): T {
 
   return debouncedValue;
 }
+
+export function useEscKey(callback?: (event: Event) => void): void {
+  useEffect(() => {
+    function handler(event: KeyboardEvent): void {
+      if (event.key === 'Escape') {
+        callback?.(event);
+        event.preventDefault();
+      }
+    }
+
+    if (callback) {
+      window.addEventListener('keyup', handler);
+
+      return () => {
+        window.removeEventListener('keyup', handler);
+      };
+    }
+
+    return undefined;
+  }, [callback]);
+}

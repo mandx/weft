@@ -4,6 +4,7 @@ import { ReactComponent as DiscIcon } from 'bootstrap-icons/icons/disc.svg';
 
 import { useRecordingsDB } from './storage';
 import { useRouteParams } from './Router';
+import SectionPage from './SectionPage';
 import Recording from './Recording';
 import { Link } from './Router';
 import RecordingSearch from './RecordingSearch';
@@ -44,16 +45,16 @@ export default function RecordingPlayer(): JSX.Element {
 
   if (recordingSrc) {
     return (
-      <section className="recording-player">
+      <SectionPage className="recording-player">
         <video src={recordingSrc} className="recording-video-player" controls autoPlay />
-      </section>
+      </SectionPage>
     );
   }
 
   switch (status) {
     case 'not-found':
       return (
-        <section className="recording-player">
+        <SectionPage className="recording-player">
           <div className="recording-not-found">
             <QuestionOctagonIcon className="question-icon" />
             <p className="recording-not-found-text">
@@ -78,17 +79,17 @@ export default function RecordingPlayer(): JSX.Element {
             </p>
             {!!recordings.length && <RecordingSearch recordings={recordings} />}
           </div>
-        </section>
+        </SectionPage>
       );
     default:
       return (
-        <section className="recording-player">
+        <SectionPage className="recording-player">
           <div className="recording-loading">
             <DiscIcon className="loading-icon" />
             Loading...
             {!!recording && recording.filename}
           </div>
-        </section>
+        </SectionPage>
       );
   }
 }

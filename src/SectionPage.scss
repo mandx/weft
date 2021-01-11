@@ -1,0 +1,9 @@
+.section-page {
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 1em;
+  border-radius: 1em;
+
+  & > h1:first-child {
+    margin-top: 0;
+  }
+}

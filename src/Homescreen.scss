@@ -1,7 +1,7 @@
 .homescreen {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
 
   a,
   a:active,
@@ -63,10 +63,6 @@
       display: flex;
       margin-block-start: 0.5em;
 
-      // > * {
-      //   display: block;
-      // }
-
       .homescreen-item-name {
         flex: 1;
         width: 1px;
@@ -74,23 +70,29 @@
     }
   }
 
-  .about-page-link {
+  .pages-links {
     display: flex;
-    align-items: center;
-    border-radius: 0.5em;
-    background-color: rgba(255, 255, 255, 0.5);
-    padding: 1em;
+    justify-content: space-evenly;
 
-    &,
-    &:active,
-    &:hover,
-    &:visited,
-    &:focus {
-      color: black;
-    }
+    & > * {
+      align-self: center;
+      display: flex;
+      align-items: center;
+      border-radius: 0.5em;
+      background-color: rgba(255, 255, 255, 0.5);
+      padding: 1em;
 
-    & > svg {
-      margin-inline-end: 0.5em;
+      &,
+      &:active,
+      &:hover,
+      &:visited,
+      &:focus {
+        color: black;
+      }
+
+      & > svg {
+        margin-inline-end: 0.5em;
+      }
     }
   }
 }

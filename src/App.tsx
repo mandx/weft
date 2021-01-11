@@ -10,6 +10,8 @@ import { createHistory, Fallback, Link, Route, Router, Switch } from './Router';
 import { useRecordingsDB } from './storage';
 import RecordingPlayer from './RecordingPlayer';
 import AboutPage from './AboutPage';
+import StorageEstimateBar from './StorageEstimateBar';
+import Settings from './Settings';
 
 function noop() {}
 
@@ -31,6 +33,13 @@ export default function App() {
       history.push('/');
     },
     [history, addRecordingsToDB]
+  );
+
+  const historyGoBack = useCallback(
+    function historyGoBackCb() {
+      history.back();
+    },
+    [history]
   );
 
   const setRecordingsList = useCallback(
@@ -109,11 +118,15 @@ export default function App() {
         </Route>
         <Route path="/play/:recordingId">
           {/* TODO: Allow passing a render function with the route params */}
-          {/* <video className="preview-video-player" controls /> */}
           <RecordingPlayer />
         </Route>
         <Route path="/about">
-          <AboutPage />
+          <AboutPage onCancel={historyGoBack}>
+            {!!storageEstimate && <StorageEstimateBar estimate={storageEstimate} />}
+          </AboutPage>
+        </Route>
+        <Route path="/settings">
+          <Settings onCancel={historyGoBack} />
         </Route>
         <Fallback>
           <Homescreen

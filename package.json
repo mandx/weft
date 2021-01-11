@@ -29,10 +29,14 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "prettify": "prettier --write src/*.ts* && prettier --parser=scss --write src/*.scss && prettier --parser=css --write src/*.css"
+    "prettify": "prettier --write src/*.ts* && prettier --parser=scss --write src/*.scss && prettier --parser=css --write src/*.css",
+    "scrape-svg-backgrounds": "ts-node -O '{\"module\":\"commonjs\"}' src/scrape-svg-backgrounds.ts"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": "react-app",
+    "rules": {
+      "curly": "error"
+    }
   },
   "browserslist": {
     "production": [
@@ -58,7 +62,10 @@
     "parser": "typescript"
   },
   "devDependencies": {
+    "@types/puppeteer": "^5.4.2",
     "prettier": "^2.2.1",
-    "source-map-explorer": "^2.5.1"
+    "puppeteer": "^5.5.0",
+    "source-map-explorer": "^2.5.1",
+    "ts-node": "^9.1.1"
   }
 }

@@ -1,8 +1,21 @@
+import { ReactNode, Children } from 'react';
+
+import { classnames } from './utilities';
+import { useEscKey } from './hooks';
+import SectionPage from './SectionPage';
 import './AboutPage.scss';
 
-export default function AboutPage() {
+interface AboutPageProps {
+  className?: string;
+  children?: ReactNode;
+  onCancel?: (event: Event) => void;
+}
+
+export default function AboutPage({ className, children, onCancel }: AboutPageProps) {
+  useEscKey(onCancel);
+
   return (
-    <section className="about-page">
+    <SectionPage className={classnames('about-page', className)}>
       <h1>Weft!</h1>
       <h2>An experimental, offline-first* self recording web app</h2>
 
@@ -21,6 +34,8 @@ export default function AboutPage() {
         </a>
         .
       </p>
-    </section>
+
+      {!!Children.count(children) && <div className="about-page-content">{children}</div>}
+    </SectionPage>
   );
 }

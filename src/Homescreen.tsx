@@ -1,14 +1,14 @@
-import React, { Fragment, useCallback, /*useEffect,*/ useRef, useState } from 'react';
+import React, { Fragment, useCallback, useRef, useState } from 'react';
 import { ReactComponent as DownloadIcon } from 'bootstrap-icons/icons/download.svg';
 import { ReactComponent as PlayIcon } from 'bootstrap-icons/icons/play.svg';
 import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil.svg';
 import { ReactComponent as XCircleIcon } from 'bootstrap-icons/icons/x-circle.svg';
 import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash.svg';
 import { ReactComponent as EmojiLaughingIcon } from 'bootstrap-icons/icons/emoji-laughing.svg';
+import { ReactComponent as GearIcon } from 'bootstrap-icons/icons/gear.svg';
 
 import './Homescreen.scss';
 import Recording from './Recording';
-import StorageEstimateBar from './StorageEstimateBar';
 import DownloadRecordingBtn from './DownloadRecording';
 import { Link } from './Router';
 
@@ -96,14 +96,6 @@ function HomescreenItem({
             className="homescreen-item-name"
           />
         ) : (
-          // <a
-          //   className="homescreen-item-name"
-          //   href={'#'}
-          //   download={recording.filename}
-          //   title={`Download recording: ${recording.timestamp.toLocaleString()}`}
-          //   aria-label={`Download recording: ${recording.timestamp.toLocaleString()}`}>
-          //   <DownloadIcon role="presentation" /> Download
-          // </a>
           <DownloadRecordingBtn
             recording={recording}
             className="homescreen-item-name"
@@ -165,7 +157,6 @@ export default function Homescreen({
   recordings,
   onEditRecordings,
   onPlayRecording,
-  storageEstimate,
 }: HomescreenProps) {
   // useEffect(() => {
   //   function handleBeforeUnload(event: BeforeUnloadEvent) {
@@ -194,7 +185,6 @@ export default function Homescreen({
       <Link to="/record" className="start-recording">
         Start Recording
       </Link>
-      {!!storageEstimate && <StorageEstimateBar estimate={storageEstimate} />}
       <ul className="homescreen-recordings">
         {recordings.map((recording, index) => (
           <li key={recording.databaseId} className="homescreen-item">
@@ -215,10 +205,16 @@ export default function Homescreen({
           </li>
         ))}
       </ul>
-      <Link className="about-page-link" to="/about">
-        <EmojiLaughingIcon />
-        About Weft
-      </Link>
+      <div className="pages-links">
+        <Link className="settings-page-link pages-link" to="/settings">
+          <GearIcon />
+          Settings
+        </Link>
+        <Link className="about-page-link pages-link" to="/about">
+          <EmojiLaughingIcon />
+          About Weft
+        </Link>
+      </div>
     </section>
   );
 }

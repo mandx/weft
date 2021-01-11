@@ -1,5 +1,6 @@
 import { useCallback, FormEvent, useState, useEffect } from 'react';
 
+import { classnames } from './utilities';
 import Recording from './Recording';
 import { Link } from './Router';
 import { useDebouncedValue } from './hooks';
@@ -39,7 +40,7 @@ export default function RecordingSearch({ recordings, ...props }: RecordingSearc
   }, [recordings, searchTerm]);
 
   return (
-    <section className={`recording-search ${props.className || ''}`}>
+    <section className={classnames('recording-search', props.className)}>
       {!!recordings.length && <input type="search" onInput={onSearchInput} value={searchText} />}
       {!filteredRecordings && !!recordings.length && (
         <div className="recent-recordings-container">

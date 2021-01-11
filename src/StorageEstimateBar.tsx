@@ -1,3 +1,4 @@
+import { classnames, formatBytes } from './utilities';
 import './StorageEstimateBar.scss';
 
 export interface StorageEstimateBarProps {
@@ -6,12 +7,30 @@ export interface StorageEstimateBarProps {
 }
 
 export default function StorageEstimateBar({ className, estimate }: StorageEstimateBarProps) {
+  const { quota, usage } = estimate;
+
   return (
-    <meter
-      title="These are the estimated storage stats, as reported by your browser."
-      className={`storage-estimate-bar ${className || ''}`}
-      min={0}
-      max={estimate.quota}
-      value={estimate.usage}></meter>
+    <div className={classnames('storage-estimate-bar', className)}>
+      <meter
+        title="These are the estimated storage stats, as reported by your browser."
+        min={0}
+        max={quota}
+        value={usage}></meter>
+
+      <dl>
+        {usage !== undefined && (
+          <>
+            <dt>Usage</dt>
+            <dd>{formatBytes(usage)}</dd>
+          </>
+        )}
+        {quota !== undefined && (
+          <>
+            <dt>Quota</dt>
+            <dd>{formatBytes(quota)}</dd>
+          </>
+        )}
+      </dl>
+    </div>
   );
 }
