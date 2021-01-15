@@ -1,3 +1,21 @@
+((): void => {
+  // eslint-disable-next-line no-restricted-globals
+  if (typeof self === 'undefined') {
+    return;
+  }
+  // @ts-ignore
+  const __WB_MANIFEST = self.__WB_MANIFEST || []; // eslint-disable-line no-restricted-globals
+  const manifest: { url: string; revision: string | number | null | undefined }[] = __WB_MANIFEST;
+  if (!manifest.length) {
+    return;
+  }
+  console.groupCollapsed('Service worker manifest');
+  for (const entry of manifest) {
+    console.log(`» ${entry.url} ${entry.revision}`);
+  }
+  console.groupEnd();
+})();
+
 // This optional code is used to register a service worker.
 // register() is not called by default.
 
@@ -10,18 +28,23 @@
 // To learn more about the benefits of this model and instructions on how to
 // opt-in, read https://bit.ly/CRA-PWA
 
-const isLocalhost = !!(
-  window.location.hostname === 'localhost' ||
-  // [::1] is the IPv6 localhost address.
-  window.location.hostname === '[::1]' ||
-  // 127.0.0.0/8 are considered localhost for IPv4.
-  window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
-);
+function isLocalhost(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  return !!(
+    window.location.hostname === 'localhost' ||
+    // [::1] is the IPv6 localhost address.
+    window.location.hostname === '[::1]' ||
+    // 127.0.0.0/8 are considered localhost for IPv4.
+    window?.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
+  );
+}
 
-type Config = {
+interface Config {
   onSuccess?: (registration: ServiceWorkerRegistration) => void;
   onUpdate?: (registration: ServiceWorkerRegistration) => void;
-};
+}
 
 export function register(config?: Config) {
   if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
@@ -37,7 +60,7 @@ export function register(config?: Config) {
     window.addEventListener('load', () => {
       const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
 
-      if (isLocalhost) {
+      if (isLocalhost()) {
         // This is running on localhost. Let's check if a service worker still exists or not.
         checkValidServiceWorker(swUrl, config);
 
