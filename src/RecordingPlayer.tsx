@@ -8,6 +8,7 @@ import SectionPage from './SectionPage';
 import Recording from './Recording';
 import { Link } from './Router';
 import RecordingSearch from './RecordingSearch';
+import VideoPlayerEditor from './VideoPlayerEditor';
 
 import './RecordingPlayer.scss';
 
@@ -46,7 +47,7 @@ export default function RecordingPlayer(): JSX.Element {
   if (recordingSrc) {
     return (
       <SectionPage className="recording-player">
-        <video src={recordingSrc} className="recording-video-player" controls autoPlay />
+        <VideoPlayerEditor videoSrc={recordingSrc} className="recording-player-video" />
       </SectionPage>
     );
   }

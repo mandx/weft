@@ -64,3 +64,71 @@ function classNameArgTransform(arg: unknown): string {
 export function classnames(...args: unknown[]): string {
   return Array.from(args).map(classNameArgTransform).filter(isTruthy).join(' ');
 }
+
+export function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(value, max));
+}
+
+export function noop(..._args: unknown[]) {}
+
+/**
+ * Utility to workaround `HTMLVideoElement.duration` issues on "unseekable" videos.
+ * Basically it creates a detached `video` element, sets `videoSrc` as its `src`
+ * and then makes it seek to some arbitrarily big timestamp.
+ *
+ * This is mainly needed in Chrome, since it produces unseekable WebM videos.
+ * (as of 2021-01-02)
+ * See https://bugs.chromium.org/p/chromium/issues/detail?id=642012
+ *
+ * TODO: Maybe race this promise against a timeout?
+ */
+export function videoDurationWorkaround(videoSrc: Blob | string): Promise<number> {
+  // return new Promise((resolve) => {
+  //   const url = videoSrc instanceof Blob ? URL.createObjectURL(videoSrc) : videoSrc;
+  //   const videoEl = document.createElement('video');
+  //   videoEl.onloadedmetadata = function () {
+  //     videoEl.currentTime = 1e101;
+  //   };
+  //   videoEl.ondurationchange = function () {
+  //     if (videoEl.duration !== +Infinity) {
+  //       resolve(videoEl.duration);
+  //       if (videoSrc instanceof Blob) {
+  //         URL.revokeObjectURL(url);
+  //       }
+  //     }
+  //   };
+  //   videoEl.preload = 'metadata';
+  //   videoEl.src = url;
+  // });
+
+  const url = videoSrc instanceof Blob ? URL.createObjectURL(videoSrc) : videoSrc;
+  const videoEl = document.createElement('video');
+  videoEl.src = url;
+  const promise = forceVideoDurationFetch(videoEl);
+  promise.finally(function () {
+    if (videoSrc instanceof Blob) {
+      URL.revokeObjectURL(url);
+    }
+  });
+  return promise;
+}
+
+export function forceVideoDurationFetch(videoEl: HTMLVideoElement): Promise<number> {
+  return new Promise(function (resolve) {
+    function metadataLoaded(this: HTMLVideoElement) {
+      this.removeEventListener('loadedmetadata', metadataLoaded);
+      this.currentTime = 1e101;
+    }
+
+    function durationChanged(this: HTMLVideoElement) {
+      if (this.duration !== +Infinity) {
+        this.removeEventListener('durationchange', durationChanged);
+        resolve(videoEl.duration);
+      }
+    }
+
+    videoEl.preload = 'metadata';
+    videoEl.addEventListener('loadedmetadata', metadataLoaded);
+    videoEl.addEventListener('durationchange', durationChanged);
+  });
+}
