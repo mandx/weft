@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useRef, useState } from 'react';
+import { Fragment, useCallback, useRef, useState, MouseEvent } from 'react';
 import { ReactComponent as DownloadIcon } from 'bootstrap-icons/icons/download.svg';
 import { ReactComponent as PlayIcon } from 'bootstrap-icons/icons/play.svg';
 import { ReactComponent as PencilIcon } from 'bootstrap-icons/icons/pencil.svg';
@@ -26,12 +26,12 @@ interface RecordingItemProps {
   /**
    * Callback triggered when deletion of this item is requested
    */
-  readonly onDeleteRecording: <T>(recording: Recording, event: React.MouseEvent<T>) => void;
+  readonly onDeleteRecording: <T>(recording: Recording, event: MouseEvent<T>) => void;
 
   /**
    * Callback triggered when playback of this item is requested.
    */
-  readonly onPlayRecording: <T>(recording: Recording, event: React.MouseEvent<T>) => void;
+  readonly onPlayRecording: <T>(recording: Recording, event: MouseEvent<T>) => void;
 }
 
 function HomescreenItem({
@@ -44,14 +44,14 @@ function HomescreenItem({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleDelete = useCallback(
-    function <T>(event: React.MouseEvent<T>): void {
+    function <T>(event: MouseEvent<T>): void {
       onDeleteRecording(recording, event);
     },
     [recording, onDeleteRecording]
   );
 
   const handleSubmit = useCallback(
-    function <T>(event: React.MouseEvent<T>): void {
+    function <T>(event: MouseEvent<T>): void {
       event.preventDefault();
 
       const input = inputRef.current;
@@ -64,16 +64,16 @@ function HomescreenItem({
     [recording, editing, onEditRecording]
   );
 
-  const startEditing = useCallback(function <T>(_event: React.MouseEvent<T>): void {
+  const startEditing = useCallback(function <T>(_event: MouseEvent<T>): void {
     setEditing(true);
   }, []);
 
-  const cancelEditing = useCallback(function <T>(_event: React.MouseEvent<T>): void {
+  const cancelEditing = useCallback(function <T>(_event: MouseEvent<T>): void {
     setEditing(false);
   }, []);
 
   const handlePlay = useCallback(
-    function <T>(event: React.MouseEvent<T>): void {
+    function <T>(event: MouseEvent<T>): void {
       onPlayRecording(recording, event);
     },
     [recording, onPlayRecording]

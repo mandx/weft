@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import './App.scss';
 import Recorder from './Recorder';
@@ -86,7 +86,7 @@ export default function App() {
     ]
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     Object.assign(window, { emitNotification: notificationsEmitter.emit });
   }, [notificationsEmitter.emit]);
 

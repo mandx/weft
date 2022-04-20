@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { ReactComponent as FullscreenIcon } from 'bootstrap-icons/icons/fullscreen.svg';
 import { ReactComponent as FullscreenExitIcon } from 'bootstrap-icons/icons/fullscreen-exit.svg';
 

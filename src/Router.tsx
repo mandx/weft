@@ -184,9 +184,11 @@ export function Link({ to, children, ...props }: LinkProps) {
 }
 
 type RouteMatchRenderer = (params: StringParams) => JSX.Element;
+type RouteChildren = ReactNode | RouteMatchRenderer;
+
 interface RouteProps {
   readonly path: string;
-  readonly children?: ReactNode | RouteMatchRenderer;
+  readonly children?: RouteChildren;
 }
 
 export function Route(props: RouteProps) {
@@ -194,7 +196,7 @@ export function Route(props: RouteProps) {
 }
 
 interface SwitchProps {
-  readonly children?: ReactNode | RouteMatchRenderer;
+  readonly children?: ReactElement<unknown, typeof Route> | ReactElement<unknown, typeof Route>[];
 }
 
 export function Switch(props: SwitchProps) {

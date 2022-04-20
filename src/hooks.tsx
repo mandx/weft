@@ -1,4 +1,4 @@
-import React, { useRef, MutableRefObject, useEffect, useState } from 'react';
+import { useRef, MutableRefObject, useEffect, useState } from 'react';
 
 type AllPossibleRefTypes<T> = ((instance: T | null) => void) | MutableRefObject<T | null>;
 
@@ -10,7 +10,7 @@ export function useCombinedRefs<T>(
 ): MutableRefObject<T | null> {
   const targetRef = useRef<T>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     refs.forEach((ref) => {
       if (!ref) {
         return;
@@ -38,7 +38,7 @@ export function useCombinedRefs<T>(
  * Taken from https://github.com/Andarist/use-constant
  */
 export function useConstant<T>(fn: () => T): T {
-  const ref = React.useRef<T>();
+  const ref = useRef<T>();
 
   if (ref.current === undefined) {
     ref.current = fn();

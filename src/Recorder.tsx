@@ -259,7 +259,10 @@ export default function Recorder({
         const canvas = canvasRef.current;
         if (canvas) {
           canvas.toBlob((blob) => {
+            if (blob) {
+
             thumbnailRef.current = URL.createObjectURL(blob);
+            }
           });
           tracks.push(...canvas.captureStream(FRAMES_PER_SECOND).getTracks());
         }

@@ -71,16 +71,13 @@ describe('bind', function () {
     });
 
     it('handles toString() method defined inherited in object', function () {
-      function Class1() {}
-      function Class2() {}
+      class SomeClass {
+        toString() {
+          return 'classFromMethod'
+        }
+      }
 
-      Class1.prototype.toString = function () {
-        return 'classFromMethod';
-      };
-
-      Class2.prototype = Object.create(Class1.prototype);
-
-      expect(classnames(new Class2())).toBe('classFromMethod');
+      expect(classnames(new SomeClass())).toBe('classFromMethod');
     });
   });
 });

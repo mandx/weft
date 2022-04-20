@@ -33,7 +33,7 @@ export async function scrape(url: string = 'https://www.svgbackgrounds.com/'): P
   page.on('console', (message) => {
     const msgType = ensureConsoleMethod(message.type());
     Promise.all(message.args().map((handle) => handle.jsonValue())).then((args) => {
-      console[msgType].call(console, '[PAGE]', ...args);
+      (console[msgType] as any).call(console, '[PAGE]', ...args);
     });
   });
 
@@ -55,6 +55,15 @@ export async function scrape(url: string = 'https://www.svgbackgrounds.com/'): P
         }
 
         const backgroundName = anchor.getAttribute('href')?.replace(/^#/g, '');
+
+        if (!backgroundName) {
+          console.log('No "name" found for anchor', {
+            id: anchor.getAttribute('id'),
+            class: anchor.getAttribute('class'),
+            href: anchor.getAttribute('href'),
+          });
+          return;
+        }
 
         console.log('Switching background to', backgroundName);
 
