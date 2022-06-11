@@ -1,30 +1,27 @@
 .homescreen {
   display: flex;
+  flex: 1;
+  margin: 2em;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
+  justify-content: center;
+  max-height: calc(100vh - 4em);
 
-  a,
-  a:active,
-  a:hover,
-  a:visited,
-  a:focus {
-    color: white;
-    text-decoration: none;
+  .flex-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-self: center;
   }
 
   .start-recording {
-    font-size: 3em;
-    text-shadow: 1px 1px 3px silver;
-    align-self: stretch;
-    text-align: center;
+    font-size: 3rem;
+    align-self: center;
     margin-bottom: 0.5em;
   }
 
   .homescreen-item {
-    margin: 10px;
+    margin: 1rem;
     display: block;
-    width: 20rem;
-    height: 20rem;
   }
 
   .homescreen-recordings {
@@ -32,6 +29,9 @@
     margin: 0;
     display: flex;
     flex-flow: row wrap;
+    flex-shrink: 1;
+    overflow-y: auto;
+    justify-content: center;
   }
 
   .homescreen-recording {
@@ -39,20 +39,11 @@
     border-radius: 5px;
     border: 5px solid silver;
     box-sizing: border-box;
-    height: 100%;
     padding: 5px;
-
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-
-    .homescreen-recording-thumbnail-wrapper {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      justify-content: center;
-      overflow: hidden;
-    }
+    max-width: 30rem;
 
     .homescreen-recording-thumbnail {
       display: block;
@@ -62,37 +53,16 @@
     .homescreen-recording-actions {
       display: flex;
       margin-block-start: 0.5em;
-
-      .homescreen-item-name {
-        flex: 1;
-        width: 1px;
-      }
     }
   }
 
   .pages-links {
     display: flex;
-    justify-content: space-evenly;
+    justify-content: center;
+    margin-top: 1em;
 
-    & > * {
-      align-self: center;
-      display: flex;
-      align-items: center;
-      border-radius: 0.5em;
-      background-color: rgba(255, 255, 255, 0.5);
-      padding: 1em;
-
-      &,
-      &:active,
-      &:hover,
-      &:visited,
-      &:focus {
-        color: black;
-      }
-
-      & > svg {
-        margin-inline-end: 0.5em;
-      }
+    .btn {
+      margin: 0 0.25em;
     }
   }
 }

@@ -9,15 +9,15 @@ import './RecordingSearch.scss';
 
 export interface RecordingSearchProps {
   className?: string;
-  recordings: readonly Recording[];
+  recordings: readonly Readonly<Recording>[];
 }
 
 export default function RecordingSearch({ recordings, ...props }: RecordingSearchProps) {
   const [searchText, setSearchText] = useState('');
   const searchTerm = useDebouncedValue(searchText, 300);
-  const [filteredRecordings, setFilteredRecordings] = useState<readonly Recording[] | undefined>(
-    undefined
-  );
+  const [filteredRecordings, setFilteredRecordings] = useState<
+    readonly Readonly<Recording>[] | undefined
+  >(undefined);
 
   const onSearchInput = useCallback(function handleSearchInput(
     event: FormEvent<HTMLInputElement>

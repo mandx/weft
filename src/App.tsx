@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react';
+import { ReactComponent as WebcamFillIcon } from 'bootstrap-icons/icons/webcam-fill.svg';
 
 import './App.scss';
 import Recorder from './Recorder';
@@ -7,32 +8,26 @@ import Homescreen from './Homescreen';
 import Notifications, { createNotificationsEmitter } from './Notifications';
 import { useConstant } from './hooks';
 import { createHistory, Fallback, Link, Route, Router, Switch } from './Router';
-import { useRecordingsDB } from './storage';
+import { useRecordingsStorage, RecordingsStorageContext } from './storage';
 import RecordingPlayer from './RecordingPlayer';
 import AboutPage from './AboutPage';
 import StorageEstimateBar from './StorageEstimateBar';
 import Settings from './Settings';
-
-function noop() {}
+import { AppBackground, applyBackground } from './app-backgrounds';
+import { noop, loadFromLocalStorage, saveToLocalStorage } from './utilities';
+import { AppBackground as AppBackgroundRuntype } from './runtypes';
 
 export default function App() {
   const notificationsEmitter = useConstant(createNotificationsEmitter);
   const history = useConstant(createHistory);
-
-  const {
-    recordings,
-    storageEstimate,
-    add: addRecordingsToDB,
-    update: updateRecordingsInDB,
-    delete: deleteRecordingsFromDB,
-  } = useRecordingsDB();
+  const recordingsStorage = useRecordingsStorage();
 
   const addNewRecording = useCallback(
     function addNewDownloadUrlCb(recording: Recording): void {
-      addRecordingsToDB([recording]);
+      recordingsStorage.add([recording]);
       history.push('/');
     },
-    [history, addRecordingsToDB]
+    [history, recordingsStorage]
   );
 
   const historyGoBack = useCallback(
@@ -42,102 +37,80 @@ export default function App() {
     [history]
   );
 
-  const setRecordingsList = useCallback(
-    function setDownloadListCb(newList: readonly Recording[]): void {
-      const currentIds = new Set(recordings.map((recording) => recording.databaseId));
-      const newIds = new Set(newList.map((recording) => recording.databaseId));
+  const selectedAppBackground = useCallback(function appBgHandler(background: AppBackground) {
+    applyBackground(background, document.getElementById('root')!);
+    saveToLocalStorage('selected-app-background', background);
+  }, []);
 
-      const deletedIds = new Set([...currentIds].filter((id) => !newIds.has(id)));
-      const addedIds = new Set([...newIds].filter((id) => !currentIds.has(id)));
-      const checkUpdatesIds = new Set(
-        [...currentIds, ...newIds].filter((id) => !addedIds.has(id) && !deletedIds.has(id))
+  useEffect(function loadSavedAppBg() {
+    try {
+      applyBackground(
+        loadFromLocalStorage('selected-app-background', AppBackgroundRuntype),
+        document.getElementById('root')!
       );
+    } catch (error) {
+      console.info('Error loading app background', `${error}`);
+    }
+  }, []);
 
-      deleteRecordingsFromDB(
-        recordings.filter((recording) => deletedIds.has(recording.databaseId))
-      ).then((recordings) => {
-        for (const recording of recordings) {
-          notificationsEmitter.emit(`"${recording.filename}" deleted`, 'success');
-        }
-      });
-
-      addRecordingsToDB(newList.filter((recording) => addedIds.has(recording.databaseId))).then(
-        (recordings) => {
-          for (const recording of recordings) {
-            notificationsEmitter.emit(`"${recording.filename}" saved`, 'success');
-          }
-        }
-      );
-
-      updateRecordingsInDB(
-        newList.filter((recording) => checkUpdatesIds.has(recording.databaseId))
-      ).then((recordings) => {
-        for (const recording of recordings) {
-          notificationsEmitter.emit(`"${recording.filename}" updated`, 'success');
-        }
-      });
+  useEffect(
+    function exposeNotifications() {
+      Object.assign(window, { emitNotification: notificationsEmitter.emit });
     },
-    [
-      addRecordingsToDB,
-      deleteRecordingsFromDB,
-      notificationsEmitter,
-      recordings,
-      updateRecordingsInDB,
-    ]
+    [notificationsEmitter.emit]
   );
 
-  useEffect(() => {
-    Object.assign(window, { emitNotification: notificationsEmitter.emit });
-  }, [notificationsEmitter.emit]);
-
   const onPlayRecording = useCallback(
-    function handlePlayRecording(recording: Recording): void {
+    function handlePlayRecording(recording: Readonly<Recording>): void {
       history.push(`/play/${recording.databaseId}`);
     },
     [history]
   );
 
   return (
-    <Router history={history}>
-      <nav className="main-nav">
-        <header className="main-header">
-          <h1>
-            <Link to="/" className="start-page-link">
-              Weft
-            </Link>
-          </h1>
-        </header>
-      </nav>
-      <Switch>
-        <Route path="/record">
-          <Recorder
-            onNewRecording={addNewRecording}
-            emitNotification={notificationsEmitter.emit}
-            onRecordingStateChange={noop}
-          />
-        </Route>
-        <Route path="/play/:recordingId">
-          {/* TODO: Allow passing a render function with the route params */}
-          <RecordingPlayer />
-        </Route>
-        <Route path="/about">
-          <AboutPage onCancel={historyGoBack}>
-            {!!storageEstimate && <StorageEstimateBar estimate={storageEstimate} />}
-          </AboutPage>
-        </Route>
-        <Route path="/settings">
-          <Settings onCancel={historyGoBack} />
-        </Route>
-        <Fallback>
-          <Homescreen
-            recordings={recordings}
-            onEditRecordings={setRecordingsList}
-            onPlayRecording={onPlayRecording}
-            storageEstimate={storageEstimate}
-          />
-        </Fallback>
-      </Switch>
-      <Notifications emitter={notificationsEmitter} />
-    </Router>
+    <RecordingsStorageContext.Provider value={recordingsStorage}>
+      <Router history={history}>
+        <nav className="main-nav">
+          <header className="main-header">
+            <h1>
+              <Link to="/" className="start-page-link btn">
+                <WebcamFillIcon className="btn-icon" width={35} height={35} />
+                <span className="btn-text">Weft</span>
+              </Link>
+            </h1>
+          </header>
+        </nav>
+        <Switch>
+          <Route route="/record">
+            <Recorder
+              onNewRecording={addNewRecording}
+              emitNotification={notificationsEmitter.emit}
+              onRecordingStateChange={noop}
+            />
+          </Route>
+          <Route route="/play/:recordingId">
+            {/* TODO: Allow passing a render function with the route params */}
+            <RecordingPlayer />
+          </Route>
+          <Route route="/about">
+            <AboutPage onCancel={historyGoBack}>
+              {!!recordingsStorage.storageEstimate && (
+                <StorageEstimateBar estimate={recordingsStorage.storageEstimate} />
+              )}
+            </AboutPage>
+          </Route>
+          <Route route="/settings">
+            <Settings onCancel={historyGoBack} onSelectedAppBackground={selectedAppBackground} />
+          </Route>
+          <Fallback>
+            <Homescreen
+              storageEstimate={recordingsStorage.storageEstimate}
+              onPlayRecording={onPlayRecording}
+            />
+          </Fallback>
+        </Switch>
+        <Notifications emitter={notificationsEmitter} />
+      </Router>
+    </RecordingsStorageContext.Provider>
   );
 }

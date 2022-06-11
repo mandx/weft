@@ -73,7 +73,7 @@ describe('bind', function () {
     it('handles toString() method defined inherited in object', function () {
       class SomeClass {
         toString() {
-          return 'classFromMethod'
+          return 'classFromMethod';
         }
       }
 

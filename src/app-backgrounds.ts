@@ -45,3 +45,12 @@ export function isAppBackgroundArray(value: unknown): value is AppBackground[] {
     }).length === value.length
   );
 }
+
+export function applyBackground(background: AppBackground, element: HTMLElement): void {
+  const cssProps = backgroundAsStyles(background);
+  for (const k of Object.keys(cssProps)) {
+    if (k[0] !== '$') {
+      element.style[k as any] = (cssProps as any)[k];
+    }
+  }
+}

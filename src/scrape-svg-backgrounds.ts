@@ -1,7 +1,27 @@
 import puppeteer from 'puppeteer';
-import { writeFileSync } from 'fs';
 
 import { AppBackground, isAppBackgroundArray } from './app-backgrounds';
+
+const logger = new console.Console({
+  stdout: process.stderr,
+  stderr: process.stderr,
+  colorMode: 'auto',
+  inspectOptions: {
+    compact: false,
+  },
+});
+
+async function stdoutWrite(value: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    process.stdout.write(value, (error) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
 
 function capitalize(str: string): string {
   return (str[0] || '').toUpperCase() + str.slice(1);
@@ -24,40 +44,41 @@ function ensureConsoleMethod(method: string): keyof Console {
   return method as keyof Console;
 }
 
-export async function scrape(url: string = 'https://www.svgbackgrounds.com/'): Promise<void> {
+(async function scrape(url: string = 'https://www.svgbackgrounds.com/'): Promise<void> {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.goto(url);
-  await page.waitForSelector('#stage .preview a.button');
+  await page.waitForSelector('#stage .bg-btn:not(.premium)');
 
   page.on('console', (message) => {
     const msgType = ensureConsoleMethod(message.type());
     Promise.all(message.args().map((handle) => handle.jsonValue())).then((args) => {
-      (console[msgType] as any).call(console, '[PAGE]', ...args);
+      (logger[msgType] as any).call(logger, '[PAGE]', ...args);
     });
   });
 
   const scrapedBackgrounds = await page.evaluate(() => {
+    const logger = console;
     return new Promise((resolve) => {
-      console.log('Starting background scraping');
+      logger.log('Starting background scraping');
 
       const results: AppBackground[] = [];
-      const anchors = Array.from(document.querySelectorAll('#stage .preview a.button'));
+      const anchors = Array.from(document.querySelectorAll('#stage .bg-btn:not(.premium)'));
       const body = document.body;
 
       function scrapeNextAnchor() {
         const anchor = anchors.shift() as HTMLElement | undefined;
 
         if (!anchor) {
-          console.log('No more anchors to process, exiting...');
+          logger.log('No more anchors to process, exiting...');
           resolve(results);
           return;
         }
 
-        const backgroundName = anchor.getAttribute('href')?.replace(/^#/g, '');
+        const backgroundName = anchor.getAttribute('id');
 
         if (!backgroundName) {
-          console.log('No "name" found for anchor', {
+          logger.log('No "name" found for anchor', {
             id: anchor.getAttribute('id'),
             class: anchor.getAttribute('class'),
             href: anchor.getAttribute('href'),
@@ -65,21 +86,22 @@ export async function scrape(url: string = 'https://www.svgbackgrounds.com/'): P
           return;
         }
 
-        console.log('Switching background to', backgroundName);
+        logger.log('Switching background to', backgroundName);
 
         anchor.click();
 
         setTimeout(
           function (name) {
-            console.log('Scraping background', name);
+            logger.log('Scraping background', name);
+
             results.push({
               $name: name,
-              color: body.style.backgroundColor,
-              image: body.style.backgroundImage,
-              attachment: body.style.backgroundAttachment,
-              size: body.style.backgroundSize,
-              repeat: body.style.backgroundRepeat,
-              position: body.style.backgroundPosition,
+              attachment: body.style.getPropertyValue('--BG-attachment'), // body.style.backgroundAttachment,
+              color: body.style.getPropertyValue('--BG-color'), // body.style.backgroundColor,
+              image: body.style.getPropertyValue('--BG-image'), // body.style.backgroundImage,
+              position: body.style.getPropertyValue('--BG-position'), // body.style.backgroundPosition,
+              repeat: body.style.getPropertyValue('--BG-repeat'), // body.style.backgroundRepeat,
+              size: body.style.getPropertyValue('--BG-size'), // body.style.backgroundSize,
             });
           },
           500,
@@ -93,22 +115,25 @@ export async function scrape(url: string = 'https://www.svgbackgrounds.com/'): P
   });
 
   await browser.close();
-  console.log('Scraping done...');
+  logger.log('Scraping done...');
 
   if (isAppBackgroundArray(scrapedBackgrounds)) {
     scrapedBackgrounds.forEach((bg) => {
       bg.$name = dashCaseToTitleCase(bg.$name);
     });
-    const filename = __dirname + '/svgBgs.json';
-    console.log('Writting', filename);
-    writeFileSync(filename, JSON.stringify(scrapedBackgrounds));
-    console.log(
+
+    await stdoutWrite(JSON.stringify(scrapedBackgrounds) + '\n');
+
+    logger.log(
       'Collected:',
       scrapedBackgrounds.map((bg) => bg.$name)
     );
   } else {
-    console.error('`isAppBackgroundArray` failed with:', scrapedBackgrounds);
+    logger.error('`isAppBackgroundArray` failed with:', scrapedBackgrounds);
   }
-}
-
-scrape();
+})()
+  .catch((error) => {
+    logger.error('Error @ scrape:', error);
+    throw error;
+  })
+  .finally(() => process.exit());

@@ -1,5 +1,6 @@
 .recording-player {
   display: flex;
+  flex-direction: column;
 
   .recording-not-found,
   .recording-loading {
@@ -27,7 +28,7 @@
   }
 
   .recording-player-video {
-    // margin: 0 1em;
+    margin: 1em 0 0;
   }
 }
 

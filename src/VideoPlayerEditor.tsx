@@ -1,9 +1,7 @@
-import { useCallback, useRef, useState, ChangeEvent, useEffect } from 'react';
+import { useCallback, useRef, useState, useEffect /*ChangeEvent*/ } from 'react';
 
 import { classnames, forceVideoDurationFetch } from './utilities';
 import './VideoPlayerEditor.scss';
-import RangesEditor, { Ranges } from './RangesEditor';
-import { parseRangesText } from './ranges';
 
 export interface VideoPlayerEditorProps {
   className?: string;
@@ -12,7 +10,7 @@ export interface VideoPlayerEditorProps {
 
 export default function VideoPlayerEditor({ className, videoSrc }: VideoPlayerEditorProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoDuration, setVideoDuration] = useState<number | undefined>(undefined);
+  const [_videoDuration, setVideoDuration] = useState<number | undefined>(undefined);
 
   const loadedVideoMetadata = useCallback(() => {
     setTimeout(() => {
@@ -25,19 +23,6 @@ export default function VideoPlayerEditor({ className, videoSrc }: VideoPlayerEd
       }
     });
   }, []);
-
-
-  const [rangesText, setRangesText] = useState('');
-  const [tmpRanges, setTmpRanges] = useState<Ranges>([]);
-
-  const onTextAreaChange = useCallback(function textareaChangeHandler(
-    event: ChangeEvent<HTMLTextAreaElement>
-  ): void {
-    const text = event.target.value;
-    setRangesText(text);
-    setTmpRanges(parseRangesText(text));
-  },
-  []);
 
   useEffect(() => {
     // NOTE: There's a Chrome bug that makes it produce unseekable WebM videos
@@ -56,7 +41,6 @@ export default function VideoPlayerEditor({ className, videoSrc }: VideoPlayerEd
         videoEl.currentTime = 0;
       });
     }
-    // This is a different
   }, [videoSrc]);
 
   return (
@@ -71,8 +55,6 @@ export default function VideoPlayerEditor({ className, videoSrc }: VideoPlayerEd
         onLoadedMetadata={loadedVideoMetadata}
         onDurationChange={loadedVideoMetadata}
       />
-      <RangesEditor ranges={tmpRanges} max={videoDuration || 0} />
-      <textarea value={rangesText} onChange={onTextAreaChange} />
     </div>
   );
 }

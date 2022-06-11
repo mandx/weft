@@ -15,13 +15,15 @@ function identity<T>(x: T): T {
   return x;
 }
 
-export function createHistory(): ReturnType<typeof createBrowserHistory> {
-  return createBrowserHistory();
-}
+export const createHistory = createBrowserHistory;
+type HistoryImpl = ReturnType<typeof createHistory>;
 
 type StringParams = { [paramName: string]: string | undefined };
 
-const HistoryContext = createContext<ReturnType<typeof createHistory> | undefined>(undefined);
+type HistoryContextInner = {
+  history: HistoryImpl;
+};
+export const HistoryContext = createContext<HistoryContextInner | undefined>(undefined);
 const RouteParamsContext = createContext<StringParams | undefined>(undefined);
 
 class CompiledRoutesCache {
@@ -48,34 +50,29 @@ class CompiledRoutesCache {
     this.innerCache.set(route, result);
     return result;
   }
+
+  isMatch(route: string, path: string): StringParams | undefined {
+    const compiled = this.get(route);
+    const regexpMatch = compiled.regexp.exec(path);
+    if (!regexpMatch) {
+      return undefined;
+    }
+
+    return compiled.keys
+      .map((key, index): [string, string] => [`${key.name}`, regexpMatch[index + 1]])
+      .reduce((params, tuple) => {
+        params[tuple[0]] = tuple[1];
+        return params;
+      }, {} as StringParams);
+  }
 }
 
 function isRouteElement(element: unknown): element is ReactElement<RouteProps, typeof Route> {
   return (
     !!element &&
     (element as any)?.type === Route &&
-    typeof (element as any)?.props?.path === 'string'
+    typeof (element as any)?.props?.route === 'string'
   );
-}
-
-function routeMatches(
-  element: ReactElement<RouteProps, typeof Route>,
-  path: string,
-  compiledRoutesCache: CompiledRoutesCache
-): StringParams | undefined {
-  const elemPath = element.props.path;
-  const compiled = compiledRoutesCache.get(elemPath);
-  const regexpMatch = compiled.regexp.exec(path);
-  if (!regexpMatch) {
-    return undefined;
-  }
-
-  return compiled.keys
-    .map((key, index): [string, string] => [`${key.name}`, regexpMatch[index + 1]])
-    .reduce((params, tuple) => {
-      params[tuple[0]] = tuple[1];
-      return params;
-    }, {} as StringParams);
 }
 
 function isSwitchElement(element: unknown): element is ReactElement<SwitchProps, typeof Switch> {
@@ -89,7 +86,7 @@ function isFallbackElement(
 }
 
 export interface RouterProps {
-  readonly history: ReturnType<typeof createHistory>;
+  readonly history: HistoryImpl;
   readonly children: React.ReactNode;
 }
 
@@ -110,10 +107,10 @@ export function Router({ history, children }: RouterProps) {
   }, [history]);
 
   return (
-    <HistoryContext.Provider value={history}>
+    <HistoryContext.Provider value={{ history }}>
       {Children.map(children, (child) => {
         if (isRouteElement(child)) {
-          const routeParams = routeMatches(child, currentPath, compiledRoutesCache);
+          const routeParams = compiledRoutesCache.isMatch(child.props.route, currentPath);
           if (routeParams) {
             const routeChildren = child.props.children;
             return (
@@ -129,7 +126,7 @@ export function Router({ history, children }: RouterProps) {
 
           for (const switchChild of Children.map(child.props.children, identity) || []) {
             if (isRouteElement(switchChild)) {
-              const routeParams = routeMatches(switchChild, currentPath, compiledRoutesCache);
+              const routeParams = compiledRoutesCache.isMatch(switchChild.props.route, currentPath);
               if (routeParams) {
                 return (
                   <RouteParamsContext.Provider value={routeParams}>
@@ -163,19 +160,25 @@ interface LinkProps {
   readonly children?: ReactNode;
 }
 
-export function Link({ to, children, ...props }: LinkProps) {
+export function Link({ to, children, className, ...props }: LinkProps) {
   return (
     <HistoryContext.Consumer>
-      {(history) => (
+      {(context) => (
         <a
           {...props}
+          className={
+            /* TODO: toggle a class name depending if the link is "active" or not*/
+            className
+          }
           href={to}
           onClick={(event) => {
+            const { history } = context || {};
             if (history) {
               event.preventDefault();
               history.push(to);
             }
-          }}>
+          }}
+        >
           {children}
         </a>
       )}
@@ -187,7 +190,7 @@ type RouteMatchRenderer = (params: StringParams) => JSX.Element;
 type RouteChildren = ReactNode | RouteMatchRenderer;
 
 interface RouteProps {
-  readonly path: string;
+  readonly route: string;
   readonly children?: RouteChildren;
 }
 

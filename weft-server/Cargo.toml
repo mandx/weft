@@ -13,8 +13,14 @@ anyhow = "^1"
 tokio = { version = "^0.2", features = ["rt-threaded","macros","blocking"] }
 hyper = "*"
 warp = "^0.2"
+futures = "^0.3"
 serde = { version = "^1.0", features = ["derive"] }
-sqlx = { version = "0.4.0-beta.1", default-features = false, features = [ "postgres", "runtime-tokio", "macros", "uuid", "json", "chrono" ] }
+sqlx = { version = "0.4.0-beta.1", default-features = false, features = [ "postgres", "runtime-tokio", "macros", "uuid", "json", "chrono", "offline" ] }
 uuid = { version = "^0.8", default-features = false, features = [ "std", "serde" ] }
 url = { version = "^2", features = [ "serde" ]}
 chrono = { version = "^0.4", features = [ "serde" ]}
+argonautica = "^0.2"
+biscuit = "^0.4"
+base64 = "*"
+regex = "*"
+oauth2 = "^3"

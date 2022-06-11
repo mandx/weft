@@ -86,9 +86,14 @@ export default class Recording {
     this._filename = newFilename;
   }
 
+  /**
+   * Creates a new recording item from an existing one; the new item's data
+   * (video + thumbnail) is still backed by the original item.
+   */
   cloneWithNewFilename(newFilename: string): Recording {
     return new Recording(this._blobResolver, this._thumbnailUrl, {
       filename: newFilename,
+      databaseId: this._databaseId,
     });
   }
 

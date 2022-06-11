@@ -1,16 +1,20 @@
-use std::convert::{Infallible, TryFrom};
+use std::{
+    collections::HashMap,
+    convert::{Infallible, TryFrom, TryInto}};
 
-use anyhow::Error;
+use anyhow::{Context, Error};
+use futures::future::TryFutureExt;
 use hyper::server::Server;
 use listenfd::ListenFd;
 use warp::{Filter, Rejection, Reply};
 
 mod auth;
 mod models;
+mod rejections;
 
 use crate::auth::{AuthError, AuthToken, UserProfile};
 
-/// Extract valid user JWT
+/// Extract user's JWT
 pub fn auth_user() -> impl Filter<Extract = (AuthToken,), Error = Rejection> + Copy {
     warp::cookie::cookie("Auth-Token").and_then(|auth_token: String| async move {
         Ok::<_, Rejection>(
@@ -51,6 +55,24 @@ pub async fn load_user_profile(
     )))
 }
 
+pub async fn signup_user(
+    signup: auth::Signup,
+    db_pool: sqlx::PgPool,
+) -> Result<impl Reply, anyhow::Error> {
+    let context_msg = format!("Error creating user out of {:?}", &signup);
+    let new_user = signup.try_into().context(context_msg)?;
+    let user = models::User::create(&db_pool, new_user).await?;
+    Ok(warp::reply::json(&user.get_profile()))
+}
+
+pub async fn oauth_start() -> Result<impl Reply, Rejection> {
+Ok(warp::reply::with_header("", "some-header-name", "some-header-value"))
+}
+
+// pub async fn oauth2_flow() -> Result<impl Reply, Rejection> {
+//     yup_oauth2::parse_application_secret()
+// }
+
 /// You'll need to install `systemfd` and `cargo-watch`:
 /// ```
 /// cargo install systemfd cargo-watch
@@ -65,11 +87,14 @@ fn main() -> Result<(), Error> {
         .enable_all()
         .build()?;
 
+    let google_client_secret = oauth2::ClientSecret::new(std::env::var("GOOGLE_CLIENT_SECRET")?);
+
     let pool = runtime.block_on(async {
         sqlx::postgres::PgPoolOptions::new().connect_lazy("postgres://localhost")
     })?;
 
     let with_database = warp::any().map(move || pool.clone());
+    let with_google_client_secret = warp::any().map(move || google_client_secret.clone());
 
     let current_user_path = warp::path("user")
         .and(warp::path::end())
@@ -95,9 +120,33 @@ fn main() -> Result<(), Error> {
         .and(with_database.clone())
         .and_then(load_user_profile);
 
-    let all_routes = warp::path("api")
-        .and(warp::path("v1"))
-        .and(current_user_routes.or(public_profile));
+    let user_session_routes = warp::path("signup")
+        .and(warp::path::end())
+        .and(warp::post())
+        .and(warp::body::content_length_limit(1024 * 32))
+        .and(warp::body::json())
+        .and(with_database.clone())
+        .and_then(|signup: auth::Signup, db_pool: sqlx::PgPool| {
+            signup_user(signup, db_pool).map_err(|_| warp::reject::reject())
+            // Ok(signup_user(signup, db_pool).unwrap()).into()
+        });
+
+    // let user_oauth_routes = warp::path("oauth2")
+    //     .and(warp::path("google"))
+    //     .and(warp::path::end())
+    //     .and
+    let oauth_route_prefix = warp::path("oauth2").and(warp::path("google"));
+    let oauth_start_route = oauth_route_prefix.and(warp::path("start")).and(warp::path::end()).and_then(oauth_start);
+    // let oauth_end = oauth2_route_prefix.and(warp::path("end")).and(warp::path::end())
+    //     .and(warp::get())
+    //     .and(warp::query::<HashMap<String, String>>())
+    //     .and_then(|| {})
+
+    let all_routes = warp::path("api").and(warp::path("v1")).and(
+        current_user_routes
+            .or(public_profile)
+            .or(user_session_routes),
+    );
 
     /**************************************************************************
      *  Server setup
@@ -106,7 +155,19 @@ fn main() -> Result<(), Error> {
     // hyper lets us build a server from a TcpListener (which will be
     // useful shortly). Thus, we'll need to convert our `warp::Filter` into
     // a `hyper::service::MakeService` for use with a `hyper::server::Server`.
-    let service = warp::service(all_routes);
+    let service = warp::service(
+        all_routes
+            // .recover(problem::unpack) // TODO
+            .with(
+                warp::cors()
+                    .allow_methods(vec!["GET", "POST", "PUT"])
+                    .allow_header("content-type")
+                    .allow_header("authorization")
+                    .allow_any_origin()
+                    .build(),
+            )
+            .with(warp::log("weft::request")),
+    );
 
     let make_service = hyper::service::make_service_fn(|_| {
         // the clone is there because not all warp filters impl Copy

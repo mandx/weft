@@ -53,7 +53,3 @@ interface MediaDevices extends EventTarget {
 interface HTMLCanvasElement extends HTMLElement {
   captureStream(frameRate: number): MediaStream;
 }
-
-interface HTMLMediaElement extends HTMLElement {
-  captureStream(): MediaStream;
-}

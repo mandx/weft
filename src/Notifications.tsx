@@ -1,4 +1,5 @@
 import { MutableRefObject, ReactNode, useState, useRef, useEffect, useCallback } from 'react';
+import { v4 as uuidV4 } from 'uuid';
 
 import './Notifications.scss';
 
@@ -54,10 +55,9 @@ interface NotificationsProps {
 }
 
 export default function Notifications({ emitter }: NotificationsProps) {
-  const intervalIdRef: MutableRefObject<ReturnType<typeof setInterval> | undefined> = useRef(
-    undefined
-  );
-  const [contents, setContents] = useState<readonly [ReactNode, NotificationLevel, number][]>([]);
+  const intervalIdRef: MutableRefObject<ReturnType<typeof setInterval> | undefined> =
+    useRef(undefined);
+  const [contents, setContents] = useState<readonly [ReactNode, NotificationLevel, string][]>([]);
 
   const intervalHandler = useCallback(() => {
     setContents((contents) => {
@@ -73,24 +73,28 @@ export default function Notifications({ emitter }: NotificationsProps) {
   }, []);
 
   useEffect(() => {
-    function handler(content: ReactNode, level: NotificationLevel): void {
+    function gotNewNotification(content: ReactNode, level: NotificationLevel): void {
       setContents((contents) => {
         if (!intervalIdRef.current) {
           intervalIdRef.current = setInterval(intervalHandler, 5000);
         }
 
-        return [...contents, [content, level, new Date().getTime()]];
+        const last = contents.at(-1);
+        if (!last || last[0] !== content || last[1] !== level) {
+          return [...contents, [content, level, uuidV4()]];
+        }
+        return contents;
       });
     }
 
-    emitter.on(handler);
+    emitter.on(gotNewNotification);
 
     return () => {
       if (intervalIdRef.current) {
         clearInterval(intervalIdRef.current);
         intervalIdRef.current = undefined;
       }
-      emitter.off(handler);
+      emitter.off(gotNewNotification);
     };
   }, [emitter, intervalHandler]);
 

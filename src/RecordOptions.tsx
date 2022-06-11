@@ -41,7 +41,7 @@ export function qualityToResolution(quality: unknown, defaultResolution: Resolut
  * 'ACTIVE': Media currently in use
  * 'INACTIVE': Media not in use
  * 'ERROR': Error accessing media stream
- * 'DENIED': User denied access to the stream - Are we using this now?
+ * 'DENIED': User denied access to the stream - (NOTE: Is this really used?)
  */
 export type MediaAccess = 'ACTIVE' | 'INACTIVE' | 'ERROR' | 'DENIED';
 

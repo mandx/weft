@@ -1,3 +1,5 @@
+import * as st from 'simple-runtypes';
+
 export function isBlobPartEmpty(blobPart: BlobPart | null | undefined): boolean {
   if (!blobPart) {
     return true;
@@ -48,8 +50,8 @@ function classNameArgTransform(arg: unknown): string {
   }
 
   if (typeof arg === 'object') {
-    if (arg!.toString !== Object.prototype.toString) {
-      return arg!.toString();
+    if (arg.toString !== Object.prototype.toString) {
+      return arg.toString();
     }
 
     return Object.entries(arg as any)
@@ -69,7 +71,7 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(value, max));
 }
 
-export function noop(..._args: unknown[]) {}
+export function noop() {}
 
 /**
  * Utility to workaround `HTMLVideoElement.duration` issues on "unseekable" videos.
@@ -131,4 +133,45 @@ export function forceVideoDurationFetch(videoEl: HTMLVideoElement): Promise<numb
     videoEl.addEventListener('loadedmetadata', metadataLoaded);
     videoEl.addEventListener('durationchange', durationChanged);
   });
+}
+
+export function saveToLocalStorage(key: string, value: unknown): void {
+  function createCircularReplacer() {
+    const visited = new WeakSet();
+    return function circularReplacer(_key: string, value: unknown): unknown {
+      if (typeof value === 'object' && value !== null) {
+        if (visited.has(value)) {
+          return;
+        }
+        visited.add(value);
+      }
+      return value;
+    };
+  }
+
+  return localStorage.setItem(key, JSON.stringify(value, createCircularReplacer()));
+}
+
+export function loadFromLocalStorage<T>(key: string, runtype: st.Runtype<T>, defaultValue?: T): T {
+  const v = localStorage.getItem(key);
+  try {
+    return runtype(
+      ((): unknown => {
+        try {
+          return JSON.parse(v || '');
+        } catch (error) {
+          throw new st.RuntypeError(
+            `Error loading "${key}" from localStorage: ${(error as Error).message}`,
+            v,
+            []
+          );
+        }
+      })()
+    );
+  } catch (error) {
+    if (defaultValue !== undefined) {
+      return defaultValue;
+    }
+    throw error;
+  }
 }

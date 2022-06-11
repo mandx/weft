@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import Dexie from 'dexie';
+import { useState, useEffect, createContext, useCallback } from 'react';
+import DexieDB from 'dexie';
 
 import { useConstant } from './hooks';
 import Recording, { BlobResolver, DatabaseID } from './Recording';
@@ -12,8 +12,8 @@ export interface RecordingRow {
   readonly thumbnail: Blob;
 }
 
-export class Database extends Dexie {
-  public recordings: Dexie.Table<RecordingRow, DatabaseID>;
+export class Database extends DexieDB {
+  public recordings: DexieDB.Table<RecordingRow, DatabaseID>;
 
   constructor() {
     super('Weft');
@@ -25,7 +25,7 @@ export class Database extends Dexie {
 }
 
 function createDatabaseBlobResolver(
-  recordingsTable: Dexie.Table<RecordingRow, DatabaseID>,
+  recordingsTable: DexieDB.Table<RecordingRow, DatabaseID>,
   rowId: DatabaseID
 ): BlobResolver {
   return function dbBlobResolver() {
@@ -43,7 +43,7 @@ function createDatabaseBlobResolver(
 }
 
 function loadRecordings(
-  recordingsTable: Dexie.Table<RecordingRow, DatabaseID>
+  recordingsTable: DexieDB.Table<RecordingRow, DatabaseID>
 ): Promise<Recording[]> {
   return new Promise((resolve, reject) => {
     recordingsTable
@@ -64,31 +64,46 @@ function loadRecordings(
   });
 }
 
-export interface RecordingsDBHook {
+export interface RecordingsStorage {
   readonly storageEstimate?: Readonly<StorageEstimate>;
-  readonly recordings: readonly Recording[];
-  readonly add: (recordings: readonly Recording[]) => Promise<readonly Recording[]>;
-  readonly update: (recordings: readonly Recording[]) => Promise<readonly Recording[]>;
-  readonly delete: (recording: readonly Recording[]) => Promise<readonly Recording[]>;
+  readonly recordings: readonly Readonly<Recording>[];
+  readonly add: (
+    recordings: readonly Readonly<Recording>[]
+  ) => Promise<readonly Readonly<Recording>[]>;
+  readonly update: (
+    recordings: readonly Readonly<Recording>[]
+  ) => Promise<readonly Readonly<Recording>[]>;
+  readonly delete: (
+    recording: readonly Readonly<Recording>[]
+  ) => Promise<readonly Readonly<Recording>[]>;
 }
 
-export function useRecordingsDB(): RecordingsDBHook {
-  const database = useConstant(() => {
-    return new Database();
-  });
+export function useRecordingsStorage(): RecordingsStorage {
+  const database = useConstant(() => new Database());
 
-  const [cachedRecordings, setCachedRecordings] = useState<readonly Recording[]>([]);
+  const [cachedRecordings, setCachedRecordings] = useState<readonly Readonly<Recording>[]>([]);
   const [storageEstimate, setStorageEstimate] = useState<Readonly<StorageEstimate> | undefined>();
 
+  const refreshCache = useCallback(
+    function refreshCacheCb() {
+      return Promise.all([loadRecordings(database.recordings), queryStorageStats()]).then(
+        ([recordings, storageEstimate]) => {
+          setCachedRecordings(recordings);
+          setStorageEstimate(storageEstimate);
+        }
+      );
+    },
+    [database, setCachedRecordings, setStorageEstimate]
+  );
+
   useEffect(() => {
-    loadRecordings(database.recordings).then(setCachedRecordings);
-    queryStorageStats().then(setStorageEstimate);
-  }, [database.recordings]);
+    refreshCache();
+  }, [refreshCache]);
 
   return {
     storageEstimate,
     recordings: cachedRecordings,
-    add(recordings: readonly Recording[]) {
+    add(recordings: readonly Readonly<Recording>[]) {
       return Promise.all(
         recordings.map((recording) =>
           fetch(recording.thumbnailUrl)
@@ -107,33 +122,27 @@ export function useRecordingsDB(): RecordingsDBHook {
             database.recordings.bulkAdd(rows);
           })
         )
-        .then(() => {
-          loadRecordings(database.recordings).then(setCachedRecordings);
-          queryStorageStats().then(setStorageEstimate);
-          return recordings;
-        });
+        .then(refreshCache)
+        .then(() => recordings);
     },
-    delete(recordings: readonly Recording[]) {
+    delete(recordings: readonly Readonly<Recording>[]) {
       return database.recordings
         .bulkDelete(recordings.map((recording) => recording.databaseId))
         .then(() => {
           recordings.forEach((recording) => recording.revokeURLs());
-          loadRecordings(database.recordings).then(setCachedRecordings);
-          queryStorageStats().then(setStorageEstimate);
-          return recordings;
-        });
+          return refreshCache();
+        })
+        .then(() => recordings);
     },
-    update(recordings: readonly Recording[]) {
+    update(recordings: readonly Readonly<Recording>[]) {
       return database.transaction('rw', database.recordings, () =>
         Promise.all(
           recordings.map((recording) =>
             database.recordings.update(recording.databaseId, { filename: recording.filename })
           )
-        ).then(() => {
-          loadRecordings(database.recordings).then(setCachedRecordings);
-          queryStorageStats().then(setStorageEstimate);
-          return recordings;
-        })
+        )
+          .then(refreshCache)
+          .then(() => recordings)
       );
     },
   };
@@ -142,3 +151,7 @@ export function useRecordingsDB(): RecordingsDBHook {
 function queryStorageStats(): Promise<Readonly<StorageEstimate>> {
   return navigator.storage.estimate();
 }
+
+export const RecordingsStorageContext = createContext<
+  ReturnType<typeof useRecordingsStorage> | undefined
+>(undefined);

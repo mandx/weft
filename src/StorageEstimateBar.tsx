@@ -15,7 +15,8 @@ export default function StorageEstimateBar({ className, estimate }: StorageEstim
         title="These are the estimated storage stats, as reported by your browser."
         min={0}
         max={quota}
-        value={usage}></meter>
+        value={usage}
+      ></meter>
 
       <dl>
         {usage !== undefined && (

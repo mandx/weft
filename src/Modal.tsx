@@ -64,7 +64,8 @@ export default function Modal({ className, children, container, open, onClose }:
       role="presentation"
       ref={containerRef}
       onKeyDown={keyboardClose}
-      tabIndex={-1}>
+      tabIndex={-1}
+    >
       <div className="modal-dialog-backdrop" aria-hidden onClick={clickClose}></div>
       <div className={classnames('modal-dialog-content', className)}>{children}</div>
     </div>,

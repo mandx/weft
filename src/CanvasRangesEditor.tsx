@@ -1,13 +1,17 @@
 import { useCallback, useRef, useEffect } from 'react';
 
+import { Range, Ranges } from './ranges';
+export type { Range, Ranges };
+
 export interface CanvasRangesEditorProps {
   duration: number;
-  seekTo: (time: number) => void;
+  ranges: Ranges;
+  seekTo?: (time: number) => void;
 }
 
-export function CanvasRangesEditor({ duration, seekTo }: CanvasRangesEditorProps) {
+export default function CanvasRangesEditor({ duration, seekTo }: CanvasRangesEditorProps) {
   const canvasHeight = 20;
-  const canvasWidth = 1000;
+  const canvasWidth = 1000 * duration;
   const dragging = useRef<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -32,7 +36,6 @@ export function CanvasRangesEditor({ duration, seekTo }: CanvasRangesEditorProps
 
       const rect = canvas.getBoundingClientRect();
       const elementX = clientX - rect.left;
-
 
       if (seekTo && duration) {
         seekTo((elementX * duration) / rect.width);
@@ -85,12 +88,13 @@ export function CanvasRangesEditor({ duration, seekTo }: CanvasRangesEditorProps
     };
   }, [mouseMoved, canvasMouseUp, drawLineAndSeek]);
 
-  return <canvas
-        ref={canvasRef}
-        height={canvasHeight}
-        width={canvasWidth}
-        onMouseDown={canvasMouseDown}
-        className="video-timeline"
-      />
-
+  return (
+    <canvas
+      ref={canvasRef}
+      height={canvasHeight}
+      width={canvasWidth}
+      onMouseDown={canvasMouseDown}
+      className="video-timeline"
+    />
+  );
 }
