@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useEffect /*ChangeEvent*/ } from 'react';
+import { /*useCallback, useState,*/ useRef, useEffect /*ChangeEvent*/ } from 'react';
 
 import { classnames, forceVideoDurationFetch } from './utilities';
 import './VideoPlayerEditor.scss';
@@ -10,19 +10,21 @@ export interface VideoPlayerEditorProps {
 
 export default function VideoPlayerEditor({ className, videoSrc }: VideoPlayerEditorProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [_videoDuration, setVideoDuration] = useState<number | undefined>(undefined);
 
-  const loadedVideoMetadata = useCallback(() => {
-    setTimeout(() => {
-      const videoEl = videoRef.current;
-      if (videoEl && videoEl.readyState > 0) {
-        const duration = videoEl.duration;
-        if (duration && duration !== +Infinity) {
-          setVideoDuration(duration);
-        }
-      }
-    });
-  }, []);
+  // TODO: We might need this code later to properly find out the video duration
+  // in some browsers
+  // const [videoDuration, setVideoDuration] = useState<number | undefined>(undefined);
+  // const loadedVideoMetadata = useCallback(() => {
+  //   setTimeout(() => {
+  //     const videoEl = videoRef.current;
+  //     if (videoEl && videoEl.readyState > 0) {
+  //       const duration = videoEl.duration;
+  //       if (duration && duration !== +Infinity) {
+  //         setVideoDuration(duration);
+  //       }
+  //     }
+  //   });
+  // }, []);
 
   useEffect(() => {
     // NOTE: There's a Chrome bug that makes it produce unseekable WebM videos
@@ -52,8 +54,8 @@ export default function VideoPlayerEditor({ className, videoSrc }: VideoPlayerEd
         controls
         autoPlay={false}
         preload="metadata"
-        onLoadedMetadata={loadedVideoMetadata}
-        onDurationChange={loadedVideoMetadata}
+        onLoadedMetadata={undefined /*loadedVideoMetadata*/}
+        onDurationChange={undefined /*loadedVideoMetadata*/}
       />
     </div>
   );
