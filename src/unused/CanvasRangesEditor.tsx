@@ -1,6 +1,6 @@
 import { useCallback, useRef, useEffect } from 'react';
 
-import { Range, Ranges } from './ranges';
+import { Range, Ranges } from '../ranges';
 export type { Range, Ranges };
 
 export interface CanvasRangesEditorProps {

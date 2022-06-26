@@ -89,8 +89,10 @@ export default function App() {
             />
           </Route>
           <Route route="/play/:recordingId">
-            {/* TODO: Allow passing a render function with the route params */}
             <RecordingPlayer />
+          </Route>
+          <Route route="/play/:recordingId/edit">
+            <RecordingPlayer editMode />
           </Route>
           <Route route="/about">
             <AboutPage onCancel={historyGoBack}>

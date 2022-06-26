@@ -194,6 +194,13 @@ interface RouteProps {
   readonly children?: RouteChildren;
 }
 
+/**
+ * Defines a route within a router: `route` prop will be an Express-like
+ * route pattern, and the JSX children inside will be the component to
+ * mount when the route matches.
+ *
+ * TODO: Allow for defining function-as-children
+ */
 export function Route(props: RouteProps) {
   return <>{props.children}</>;
 }

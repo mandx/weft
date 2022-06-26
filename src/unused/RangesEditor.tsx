@@ -1,7 +1,7 @@
 import { CSSProperties } from 'react';
 
-import { classnames } from './utilities';
-import { Range, Ranges } from './ranges';
+import { classnames } from '../utilities';
+import { Range, Ranges } from '../ranges';
 
 import './RangesEditor.scss';
 

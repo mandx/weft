@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useContext } from 'react';
 import { ReactComponent as QuestionOctagonIcon } from 'bootstrap-icons/icons/question-octagon.svg';
-// import { ReactComponent as DiscIcon } from 'bootstrap-icons/icons/disc.svg';
 
 import { useRecordingsStorage } from './storage';
 import { useRouteParams } from './Router';
@@ -8,15 +7,20 @@ import SectionPage from './SectionPage';
 import Recording from './Recording';
 import { Link, HistoryContext } from './Router';
 import RecordingSearch from './RecordingSearch';
+import VideoElement from './VideoElement';
 import VideoPlayerEditor from './VideoPlayerEditor';
 
 import './RecordingPlayer.scss';
 import RecordingActionsToolbar from './RecordingActionsToolbar';
 import { noop } from './utilities';
 
-export default function RecordingPlayer(): JSX.Element {
-  const { recordings, update: updateRecordings, delete: deleteRecordings } = useRecordingsStorage();
+interface RecordingPlayerProps {
+  editMode?: boolean;
+}
+
+export default function RecordingPlayer({ editMode }: RecordingPlayerProps): JSX.Element {
   const { recordingId } = useRouteParams() || {};
+  const { recordings, update: updateRecordings, delete: deleteRecordings } = useRecordingsStorage();
   const [recordingBlobURL, setRecordingBlobURL] = useState<string>('');
 
   const recording = recordingId
@@ -101,7 +105,18 @@ export default function RecordingPlayer(): JSX.Element {
           onEditRecording={editRecording}
         />
       )}
-      <VideoPlayerEditor videoSrc={recordingBlobURL} className="recording-player-video" />
+      {!!recordingBlobURL &&
+        (editMode ? (
+          <VideoPlayerEditor src={recordingBlobURL} />
+        ) : (
+          <VideoElement
+            src={recordingBlobURL}
+            className="recording-player-video video-player"
+            controls
+            autoPlay={false}
+            preload="metadata"
+          />
+        ))}
     </SectionPage>
   );
 }
