@@ -1,11 +1,11 @@
 import { useCallback, useRef, useEffect } from 'react';
 
-import { Range, Ranges } from '../ranges';
-export type { Range, Ranges };
+import { Range } from '../ranges';
+export type { Range };
 
 export interface CanvasRangesEditorProps {
   duration: number;
-  ranges: Ranges;
+  ranges: readonly Range[];
   seekTo?: (time: number) => void;
 }
 

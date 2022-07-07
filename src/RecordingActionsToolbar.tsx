@@ -27,12 +27,12 @@ interface RecordingActionsToolbarProps {
   /**
    * Callback triggered with a new "version" of this item.
    */
-  readonly onEditRecording: (recording: Readonly<Recording>) => void;
+  readonly onEditRecording?: (recording: Readonly<Recording>) => void;
 
   /**
    * Callback triggered when deletion of this item is requested
    */
-  readonly onDeleteRecording: <T>(recording: Readonly<Recording>, event: MouseEvent<T>) => void;
+  readonly onDeleteRecording?: <T>(recording: Readonly<Recording>, event: MouseEvent<T>) => void;
 
   /**
    * Callback triggered when playback of this item is requested.
@@ -52,7 +52,7 @@ export default function RecordingActionsToolbar({
 
   const onDeleteClicked = useCallback(
     function handleDeleteClick<T>(event: MouseEvent<T>): void {
-      onDeleteRecording(recording, event);
+      onDeleteRecording?.(recording, event);
     },
     [recording, onDeleteRecording]
   );
@@ -62,7 +62,7 @@ export default function RecordingActionsToolbar({
       event.preventDefault();
 
       const input = inputRef.current;
-      if (editing && input) {
+      if (editing && input && onEditRecording) {
         onEditRecording(recording.cloneWithNewFilename(input.value));
       }
 
@@ -148,15 +148,17 @@ export default function RecordingActionsToolbar({
           </button>
         </Fragment>
       )}
-      <button
-        className="btn"
-        type="button"
-        onClick={onDeleteClicked}
-        title="Delete"
-        aria-label="Delete"
-      >
-        <TrashIcon className="btn-icon" role="presentation" />
-      </button>
+      {!!onDeleteRecording && (
+        <button
+          className="btn"
+          type="button"
+          onClick={onDeleteClicked}
+          title="Delete"
+          aria-label="Delete"
+        >
+          <TrashIcon className="btn-icon" role="presentation" />
+        </button>
+      )}
       <DownloadRecordingBtn recording={recording} className="btn">
         <DownloadIcon className="btn-icon" role="presentation" />
       </DownloadRecordingBtn>

@@ -14,7 +14,9 @@ export const VideoElement = forwardRef<
   videoRef
 ) {
   if (typeof videoRef === 'function') {
-    console.error('VideoElement\'s forwarded Ref is a function; it should be a `React.MutableRefObject` instance.');
+    console.error(
+      "VideoElement's forwarded Ref is a function; it should be a `React.MutableRefObject` instance."
+    );
   }
 
   const checkVideoDuration = useCallback(() => {

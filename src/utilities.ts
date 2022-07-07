@@ -73,6 +73,10 @@ export function clamp(value: number, min: number, max: number): number {
 
 export function noop() {}
 
+export function identity<T>(x: T): T {
+  return x;
+}
+
 /**
  * Utility to workaround `HTMLVideoElement.duration` issues on "unseekable" videos.
  * Basically it creates a detached `video` element, sets `videoSrc` as its `src`

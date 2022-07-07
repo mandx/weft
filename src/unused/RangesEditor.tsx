@@ -1,11 +1,11 @@
 import { CSSProperties } from 'react';
 
 import { classnames } from '../utilities';
-import { Range, Ranges } from '../ranges';
+import { Range } from '../ranges';
 
 import './RangesEditor.scss';
 
-export type { Range, Ranges };
+export type { Range };
 
 export interface RangeBlockProps {
   range: Range;
@@ -35,7 +35,7 @@ function RangeBlock({ range, min, max }: RangeBlockProps) {
 
 export interface RangesEditorProps {
   className?: string;
-  ranges: Ranges;
+  ranges: readonly Range[];
   min?: number;
   max: number;
 }
