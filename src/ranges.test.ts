@@ -1,4 +1,4 @@
-import { make, merge, mergeMany, overlap } from './ranges';
+import { closest, make, merge, mergeMany, overlap, transform } from './ranges';
 
 describe('make', () => {
   it('should create ranges with proper start/end', () => {
@@ -184,5 +184,58 @@ describe('mergeMany', () => {
         [3, 3.5],
       ]);
     });
+  });
+});
+
+describe('closest', () => {
+  it('should work', () => {
+    expect(closest(1, [make(1, 2), make(0, 2)])).toEqual({ in: true, range: make(1, 2) });
+    expect(closest(1, [make(0, 2), make(1, 2)])).toEqual({ in: true, range: make(0, 2) });
+    expect(closest(1, [make(0.5, 2), make(1, 2)])).toEqual({ in: true, range: make(0.5, 2) });
+    expect(closest(0, [make(0.5, 2), make(1, 2)])).toEqual({ in: false, nextRange: make(0.5, 2) });
+    expect(closest(3, [make(0.5, 2), make(1, 2)])).toEqual({ in: false, nextRange: undefined });
+    expect(closest(3, [make(1, 2), make(0.5, 2)])).toEqual({ in: false, nextRange: undefined });
+  });
+});
+
+describe('transform', () => {
+  it('should work', () => {
+    expect(transform([make(1, 2), make(0, 2)], (value) => value * 2)).toEqual([
+      make(2, 4),
+      make(0, 4),
+    ]);
+  });
+
+  it('should use the index arg', () => {
+    expect(transform([make(1, 2), make(0, 2)], (value, index) => value + index)).toEqual([
+      make(1, 2),
+      make(1, 3),
+    ]);
+
+    expect(transform([make(1, 2), make(0, 2)], (value, index) => value * index)).toEqual([
+      make(0, 0),
+      make(0, 2),
+    ]);
+
+    expect(transform([make(1, 2), make(0, 2)], (value, index) => value * (index + 1))).toEqual([
+      make(1, 2),
+      make(0, 4),
+    ]);
+  });
+
+  it('should use the index and the edge args', () => {
+    expect(
+      transform(
+        [make(1, 2), make(0, 2)],
+        (value, index, edge) => value * (index + 1) * (edge === 'start' ? -1 : 1)
+      )
+    ).toEqual([make(-1, 2), make(-0, 4)]);
+
+    expect(
+      transform(
+        [make(1, 2), make(3, 5)],
+        (value, index, edge) => value * (index + 2) * (edge === 'start' ? -1 : 1)
+      )
+    ).toEqual([make(-2, 4), make(-9, 15)]);
   });
 });

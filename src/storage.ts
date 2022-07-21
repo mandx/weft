@@ -24,9 +24,14 @@ export class Database extends DexieDB {
   }
 }
 
+type KeyOfType<T, V> = keyof {
+  [P in keyof T as T[P] extends V ? P : never]: unknown;
+};
+
 function createDatabaseBlobResolver(
   recordingsTable: DexieDB.Table<RecordingRow, DatabaseID>,
-  rowId: DatabaseID
+  rowId: DatabaseID,
+  fieldName: KeyOfType<RecordingRow, Blob>
 ): BlobResolver {
   return function dbBlobResolver() {
     return recordingsTable
@@ -37,7 +42,7 @@ function createDatabaseBlobResolver(
           throw new Error(`No items found for database ID «${rowId}»`);
         }
 
-        return items[0].src;
+        return items[0][fieldName];
       });
   };
 }
@@ -45,23 +50,23 @@ function createDatabaseBlobResolver(
 function loadRecordings(
   recordingsTable: DexieDB.Table<RecordingRow, DatabaseID>
 ): Promise<Recording[]> {
-  return new Promise((resolve, reject) => {
-    recordingsTable
-      .orderBy('timestamp')
-      .reverse()
-      .toArray()
-      .then((items) => {
-        resolve(
-          items.map(
-            (item) =>
-              new Recording(createDatabaseBlobResolver(recordingsTable, item.id), item.thumbnail, {
-                filename: item.filename,
-                databaseId: item.id,
-              })
+  return recordingsTable
+    .orderBy('timestamp')
+    .reverse()
+    .toArray()
+    .then((items) =>
+      items.map(
+        (item) =>
+          new Recording(
+            createDatabaseBlobResolver(recordingsTable, item.id, 'src'),
+            createDatabaseBlobResolver(recordingsTable, item.id, 'thumbnail'),
+            {
+              filename: item.filename,
+              databaseId: item.id,
+            }
           )
-        );
-      }, reject);
-  });
+      )
+    );
 }
 
 export interface RecordingsStorage {
@@ -78,6 +83,10 @@ export interface RecordingsStorage {
   ) => Promise<readonly Readonly<Recording>[]>;
 }
 
+function queryStorageStats(): Promise<Readonly<StorageEstimate>> {
+  return navigator.storage.estimate();
+}
+
 export function useRecordingsStorage(): RecordingsStorage {
   const database = useConstant(() => new Database());
 
@@ -86,8 +95,13 @@ export function useRecordingsStorage(): RecordingsStorage {
 
   const refreshCache = useCallback(
     function refreshCacheCb() {
+      console.warn('Reloading recordings from IndexedDB...');
       return Promise.all([loadRecordings(database.recordings), queryStorageStats()]).then(
         ([recordings, storageEstimate]) => {
+          console.warn(
+            'Reloaded recordings from IndexedDB',
+            recordings.map((r) => r.databaseId)
+          );
           setCachedRecordings(recordings);
           setStorageEstimate(storageEstimate);
         }
@@ -106,21 +120,19 @@ export function useRecordingsStorage(): RecordingsStorage {
     add(recordings: readonly Readonly<Recording>[]) {
       return Promise.all(
         recordings.map((recording) =>
-          fetch(recording.thumbnailUrl)
-            .then((thumbRes) => Promise.all([recording.getBlob(), thumbRes.blob()]))
-            .then(([srcBlob, thumbBlob]) => ({
+          Promise.all([recording.getBlob(), recording.getThumbnailBlob()]).then(
+            ([srcBlob, thumbBlob]) => ({
               id: recording.databaseId,
               src: srcBlob,
               timestamp: recording.timestamp,
               filename: recording.filename,
               thumbnail: thumbBlob,
-            }))
+            })
+          )
         )
       )
         .then((rows) =>
-          database.transaction('rw', database.recordings, () => {
-            database.recordings.bulkAdd(rows);
-          })
+          database.transaction('rw', database.recordings, () => database.recordings.bulkAdd(rows))
         )
         .then(refreshCache)
         .then(() => recordings);
@@ -128,10 +140,7 @@ export function useRecordingsStorage(): RecordingsStorage {
     delete(recordings: readonly Readonly<Recording>[]) {
       return database.recordings
         .bulkDelete(recordings.map((recording) => recording.databaseId))
-        .then(() => {
-          recordings.forEach((recording) => recording.revokeURLs());
-          return refreshCache();
-        })
+        .then(() => refreshCache())
         .then(() => recordings);
     },
     update(recordings: readonly Readonly<Recording>[]) {
@@ -146,10 +155,6 @@ export function useRecordingsStorage(): RecordingsStorage {
       );
     },
   };
-}
-
-function queryStorageStats(): Promise<Readonly<StorageEstimate>> {
-  return navigator.storage.estimate();
 }
 
 export const RecordingsStorageContext = createContext<

@@ -55,7 +55,7 @@ export default function Recorder({
   const cameraStream: MutableRefObject<MediaStream | null> = useRef(null);
   const microphoneStream: MutableRefObject<MediaStream | null> = useRef(null);
 
-  const thumbnailRef = useRef<string>(EMPTY_IMAGE);
+  const thumbnailRef = useRef<Blob | undefined>(undefined);
   const imagePatternRef = useRef<HTMLImageElement>(null);
 
   /*
@@ -215,7 +215,12 @@ export default function Recorder({
         console.log('Stopping recording');
         recorderRef.current = null;
         recorder.stop().then((blob) => {
-          onNewRecording(new Recording(createMemoryBlobResolver(blob), thumbnailRef.current));
+          onNewRecording(
+            new Recording(
+              createMemoryBlobResolver(blob),
+              createMemoryBlobResolver(thumbnailRef.current || new Blob())
+            )
+          );
         });
         setRecording(false);
         onRecordingStateChange('STOPPED');
@@ -233,9 +238,7 @@ export default function Recorder({
         const canvas = canvasRef.current;
         if (canvas) {
           canvas.toBlob((blob) => {
-            if (blob) {
-              thumbnailRef.current = URL.createObjectURL(blob);
-            }
+            thumbnailRef.current = blob || undefined;
           });
           tracks.push(...canvas.captureStream(FRAMES_PER_SECOND).getTracks());
         }

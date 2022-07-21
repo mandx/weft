@@ -25,6 +25,16 @@ interface RecordingActionsToolbarProps {
   readonly displayFilename?: boolean | string;
 
   /**
+   * UI to add before the toolbar buttons
+   */
+  beforeButtons?: JSX.Element;
+
+  /**
+   * UI to add after the toolbar buttons
+   */
+  afterButtons?: JSX.Element;
+
+  /**
    * Callback triggered with a new "version" of this item.
    */
   readonly onEditRecording?: (recording: Readonly<Recording>) => void;
@@ -43,6 +53,8 @@ interface RecordingActionsToolbarProps {
 export default function RecordingActionsToolbar({
   recording,
   displayFilename,
+  beforeButtons,
+  afterButtons,
   onEditRecording,
   onDeleteRecording,
   onPlayRecording,
@@ -57,7 +69,7 @@ export default function RecordingActionsToolbar({
     [recording, onDeleteRecording]
   );
 
-  const onFormSubmitted = useCallback(
+  const onRenameFormSubmitted = useCallback(
     function handleFormSubmit<T>(event: MouseEvent<T>): void {
       event.preventDefault();
 
@@ -90,23 +102,19 @@ export default function RecordingActionsToolbar({
   );
 
   return (
-    <form onSubmit={onFormSubmitted} className="recording-actions-toolbar">
+    <form onSubmit={onRenameFormSubmitted} className="recording-actions-toolbar">
       {editing ? (
         <input defaultValue={recording.filename} ref={inputRef} className="recording-item-name" />
+      ) : displayFilename === undefined || displayFilename === true ? (
+        <span className="recording-item-name" title={recording.filename}>
+          {recording.filename}
+        </span>
+      ) : typeof displayFilename === 'string' ? (
+        <span className="recording-item-name" title={displayFilename}>
+          {displayFilename}
+        </span>
       ) : (
-        <>
-          {displayFilename === undefined || displayFilename === true ? (
-            <span className="recording-item-name" title={recording.filename}>
-              {recording.filename}
-            </span>
-          ) : typeof displayFilename === 'string' ? (
-            <span className="recording-item-name" title={displayFilename}>
-              {displayFilename}
-            </span>
-          ) : (
-            false
-          )}
-        </>
+        false
       )}
       {editing ? (
         <Fragment>
@@ -126,6 +134,7 @@ export default function RecordingActionsToolbar({
         </Fragment>
       ) : (
         <Fragment>
+          {beforeButtons}
           {!!onPlayRecording && (
             <button
               className="btn"
@@ -146,22 +155,23 @@ export default function RecordingActionsToolbar({
           >
             <PencilIcon className="btn-icon" role="presentation" />
           </button>
+          {!!onDeleteRecording && (
+            <button
+              className="btn"
+              type="button"
+              onClick={onDeleteClicked}
+              title="Delete"
+              aria-label="Delete"
+            >
+              <TrashIcon className="btn-icon" role="presentation" />
+            </button>
+          )}
+          <DownloadRecordingBtn recording={recording} className="btn">
+            <DownloadIcon className="btn-icon" role="presentation" />
+          </DownloadRecordingBtn>
+          {afterButtons}
         </Fragment>
       )}
-      {!!onDeleteRecording && (
-        <button
-          className="btn"
-          type="button"
-          onClick={onDeleteClicked}
-          title="Delete"
-          aria-label="Delete"
-        >
-          <TrashIcon className="btn-icon" role="presentation" />
-        </button>
-      )}
-      <DownloadRecordingBtn recording={recording} className="btn">
-        <DownloadIcon className="btn-icon" role="presentation" />
-      </DownloadRecordingBtn>
     </form>
   );
 }

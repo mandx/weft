@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useContext } from 'react';
 import { ReactComponent as QuestionOctagonIcon } from 'bootstrap-icons/icons/question-octagon.svg';
 
-import { useRecordingsStorage } from './storage';
+import { useRecordings } from './storage-swr';
 import { useRouteParams } from './Router';
 import SectionPage from './SectionPage';
 import Recording from './Recording';
@@ -20,12 +20,14 @@ interface RecordingPlayerProps {
 
 export default function RecordingPlayer({ editMode }: RecordingPlayerProps): JSX.Element {
   const { recordingId } = useRouteParams() || {};
-  const { recordings, update: updateRecordings, delete: deleteRecordings } = useRecordingsStorage();
+  const recordings = useRecordings();
+  const [recordingBlob, setRecordingBlob] = useState<Blob | undefined>(undefined);
   const [recordingBlobURL, setRecordingBlobURL] = useState<string>('');
 
-  const recording = recordingId
-    ? recordings.find((recording) => recording.databaseId === recordingId)
-    : undefined;
+  const recording =
+    recordingId && recordings.data.status === 'loaded'
+      ? recordings.data.list.find((recording) => recording.databaseId === recordingId)
+      : undefined;
 
   useEffect(
     function loadRecordingBlob() {
@@ -34,6 +36,7 @@ export default function RecordingPlayer({ editMode }: RecordingPlayerProps): JSX
 
       recording?.getBlob().then((blob) => {
         if (!ignore) {
+          setRecordingBlob(blob);
           setRecordingBlobURL((blobUrl = URL.createObjectURL(blob)));
         }
       });
@@ -51,18 +54,18 @@ export default function RecordingPlayer({ editMode }: RecordingPlayerProps): JSX
 
   const deleteRecording = useCallback(
     function handleDeleteRecording(recording: Readonly<Recording>): Promise<void> {
-      return deleteRecordings([recording]).then(() => {
+      return recordings.delete([recording]).then(() => {
         historyContext?.history.push('/');
       });
     },
-    [historyContext, deleteRecordings]
+    [historyContext, recordings.delete]
   );
 
   const editRecording = useCallback(
     function handleEditRecording(recording: Readonly<Recording>): Promise<void> {
-      return updateRecordings([recording]).then(noop);
+      return recordings.update([recording]).then(noop);
     },
-    [updateRecordings]
+    [recordings.update]
   );
 
   if (!recording) {
@@ -72,7 +75,7 @@ export default function RecordingPlayer({ editMode }: RecordingPlayerProps): JSX
           <QuestionOctagonIcon className="question-icon" />
           <p className="recording-not-found-text">
             No recording found... somehow we got here via a bad link?{' '}
-            {!!recordings.length ? (
+            {recordings.data.status === 'loaded' && recordings.data.list.length ? (
               <>
                 You can{' '}
                 <Link className="home-link" to="/">
@@ -90,7 +93,9 @@ export default function RecordingPlayer({ editMode }: RecordingPlayerProps): JSX
               </>
             )}
           </p>
-          {!!recordings.length && <RecordingSearch recordings={recordings} />}
+          {!!(recordings.data.status === 'loaded' && recordings.data.list.length) && (
+            <RecordingSearch recordings={recordings.data.list} />
+          )}
         </div>
       </SectionPage>
     );
@@ -106,8 +111,8 @@ export default function RecordingPlayer({ editMode }: RecordingPlayerProps): JSX
         />
       )}
       {!!recordingBlobURL &&
-        (editMode ? (
-          <VideoPlayerEditor src={recordingBlobURL} />
+        (editMode && recordingBlob ? (
+          <VideoPlayerEditor recording={recording} />
         ) : (
           <VideoElement
             src={recordingBlobURL}

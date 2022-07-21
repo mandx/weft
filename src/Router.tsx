@@ -6,6 +6,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  HTMLProps,
 } from 'react';
 import { createBrowserHistory } from 'history';
 import { pathToRegexp, Key as RouteKey } from 'path-to-regexp';
@@ -160,7 +161,12 @@ interface LinkProps {
   readonly children?: ReactNode;
 }
 
-export function Link({ to, children, className, ...props }: LinkProps) {
+export function Link({
+  to,
+  children,
+  className,
+  ...props
+}: LinkProps & HTMLProps<HTMLAnchorElement>) {
   return (
     <HistoryContext.Consumer>
       {(context) => (

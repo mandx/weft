@@ -1,0 +1,29 @@
+.ranges-list-editor {
+  box-sizing: border-box;
+
+  .ranges-list-editor-toolbar {
+    margin: 1em;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .ranges-list-editor-range-item {
+    display: flex;
+  }
+
+  .ranges-list-editor-range-item-slider-container {
+    margin: 0 2em;
+    flex: 1;
+  }
+
+  .ranges-list-editor-range-item-actions-container {
+    display: flex;
+    align-items: center;
+  }
+
+  .ranges-list-editor-ranges-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+}
