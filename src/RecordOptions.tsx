@@ -137,24 +137,32 @@ export default function RecordOptions({
   return (
     <div className="recording-actions-wrapper">
       <div className="recording-actions">
-        <button className="recording" onClick={toggleRecording}>
-          {recording ? (
-            <CameraReelsIcon role="presentation" />
-          ) : (
-            <CameraReelsFillIcon role="presentation" />
-          )}
-          {recording ? 'Stop recording' : 'Start recording'}
+        <button className="btn recording" onClick={toggleRecording}>
+          <span className="btn-icon">
+            {recording ? (
+              <CameraReelsIcon role="presentation" />
+            ) : (
+              <CameraReelsFillIcon role="presentation" />
+            )}
+          </span>
+          <span className="btn-text">{recording ? 'Stop recording' : 'Start recording'}</span>
         </button>
         <div className={classnames('recording-options-container', expanded && 'expanded')}>
-          <button className="recording-options" title="Recording options" onClick={optionsClicked}>
-            {expanded ? <GearIcon role="presentation" /> : <GearFillIcon role="presentation" />}
-            Options
+          <button
+            className="btn recording-options"
+            title="Recording options"
+            onClick={optionsClicked}
+          >
+            <span className="btn-icon">
+              {expanded ? <GearIcon role="presentation" /> : <GearFillIcon role="presentation" />}
+            </span>
+            <span className="btn-text">Options</span>
           </button>
           <ul className="recording-options-menu">
             <li>
               <label>
                 Quality
-                <select name="quality" value={quality} onChange={selectQuality}>
+                <select className="btn" name="quality" value={quality} onChange={selectQuality}>
                   <option value="720p">720p</option>
                   <option value="1080p">1080p</option>
                 </select>

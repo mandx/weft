@@ -73,6 +73,10 @@ export function clamp(value: number, min: number, max: number): number {
 
 export function noop() {}
 
+export function identity<T>(x: T): T {
+  return x;
+}
+
 /**
  * Utility to workaround `HTMLVideoElement.duration` issues on "unseekable" videos.
  * Basically it creates a detached `video` element, sets `videoSrc` as its `src`
@@ -174,4 +178,18 @@ export function loadFromLocalStorage<T>(key: string, runtype: st.Runtype<T>, def
     }
     throw error;
   }
+}
+
+export function triggerBlobDownload(blob: Blob, filename: string): void {
+  const blobUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.style.display = 'none';
+  anchor.setAttribute('href', blobUrl);
+  anchor.setAttribute('download', filename);
+  document.body.appendChild(anchor);
+  anchor.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(blobUrl);
+    document.body.removeChild(anchor);
+  });
 }

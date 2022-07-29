@@ -61,11 +61,9 @@ export default function Notifications({ emitter }: NotificationsProps) {
 
   const intervalHandler = useCallback(() => {
     setContents((contents) => {
-      if (contents.length === 1) {
-        if (intervalIdRef.current) {
-          clearInterval(intervalIdRef.current);
-          intervalIdRef.current = undefined;
-        }
+      if (contents.length === 1 && intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+        intervalIdRef.current = undefined;
       }
 
       return contents.slice(1);

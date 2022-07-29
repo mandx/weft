@@ -6,6 +6,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  HTMLProps,
 } from 'react';
 import { createBrowserHistory } from 'history';
 import { pathToRegexp, Key as RouteKey } from 'path-to-regexp';
@@ -160,7 +161,12 @@ interface LinkProps {
   readonly children?: ReactNode;
 }
 
-export function Link({ to, children, className, ...props }: LinkProps) {
+export function Link({
+  to,
+  children,
+  className,
+  ...props
+}: LinkProps & HTMLProps<HTMLAnchorElement>) {
   return (
     <HistoryContext.Consumer>
       {(context) => (
@@ -194,6 +200,13 @@ interface RouteProps {
   readonly children?: RouteChildren;
 }
 
+/**
+ * Defines a route within a router: `route` prop will be an Express-like
+ * route pattern, and the JSX children inside will be the component to
+ * mount when the route matches.
+ *
+ * TODO: Allow for defining function-as-children
+ */
 export function Route(props: RouteProps) {
   return <>{props.children}</>;
 }

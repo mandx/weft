@@ -1,61 +1,189 @@
-import { /*useCallback, useState,*/ useRef, useEffect /*ChangeEvent*/ } from 'react';
-
-import { classnames, forceVideoDurationFetch } from './utilities';
+import { useCallback, useRef, Ref, useState, useEffect } from 'react';
+import FfmpegWrapper from './ffmpeg-wrapper';
+import { useConstant } from './hooks';
+import { closest, transform as transformRanges } from './ranges';
+import RangesListEditor, { makeRange, Range } from './RangesListEditor';
+import Recording, { createMemoryBlobResolver } from './Recording';
+import { useRecordings } from './storage-swr';
+import { classnames, triggerBlobDownload } from './utilities';
+import VideoElement from './VideoElement';
 import './VideoPlayerEditor.scss';
 
 export interface VideoPlayerEditorProps {
-  className?: string;
-  videoSrc: string;
+  readonly className?: string;
+  readonly recording: Readonly<Recording>;
 }
 
-export default function VideoPlayerEditor({ className, videoSrc }: VideoPlayerEditorProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+export default function VideoPlayerEditor({ className, recording }: VideoPlayerEditorProps) {
+  const ffmpeg = useConstant(() => new FfmpegWrapper());
 
-  // TODO: We might need this code later to properly find out the video duration
-  // in some browsers
-  // const [videoDuration, setVideoDuration] = useState<number | undefined>(undefined);
-  // const loadedVideoMetadata = useCallback(() => {
-  //   setTimeout(() => {
-  //     const videoEl = videoRef.current;
-  //     if (videoEl && videoEl.readyState > 0) {
-  //       const duration = videoEl.duration;
-  //       if (duration && duration !== +Infinity) {
-  //         setVideoDuration(duration);
-  //       }
-  //     }
-  //   });
-  // }, []);
-
+  /*
   useEffect(() => {
-    // NOTE: There's a Chrome bug that makes it produce unseekable WebM videos
-    //       See https://bugs.chromium.org/p/chromium/issues/detail?id=642012
-    //       So the contents of this effect is simply about to finding out the
-    //       real duration of the video, by creating an off-document video
-    //       element load the videoSrc and make it seek to some big number,
-    //       this will trigger another `durationchange` event  then will
-    //       (hopefully) will contain the actual duration.
-    // TODO: Maybe only do this for Chrome, since it's the only one exposing this bug
-    // const isChrome = window.navigator.userAgent.toLowerCase().indexOf('chrome') > -1 && !!window.chrome;
-    // videoDurationWorkaround(videoSrc).then(setVideoDuration);
-    const videoEl = videoRef.current;
-    if (videoEl) {
-      forceVideoDurationFetch(videoEl).then(function () {
-        videoEl.currentTime = 0;
-      });
+    function reObj<T extends object>(value: T): unknown {
+      return Object.fromEntries(Object.entries(value));
     }
-  }, [videoSrc]);
+    function listener(event: Event) {
+      switch (event.type) {
+        case 'output':
+          console.info('FfmpegWrapper:', event.type, reObj(event));
+          break;
+
+        case 'progress':
+          console.info('FfmpegWrapper:', event.type, reObj(event));
+          break;
+
+        case 'loaded':
+          console.info('FfmpegWrapper:', event.type, reObj(event));
+          break;
+
+        case 'loaded-error':
+          console.info('FfmpegWrapper:', event.type, reObj(event));
+          break;
+
+        default:
+          console.warn('Unkown event type from FfmpegWrapper:', event.type, reObj(event));
+      }
+    }
+
+    ffmpeg.addEventListener('output', listener);
+    ffmpeg.addEventListener('progress', listener);
+    ffmpeg.addEventListener('loaded', listener);
+    ffmpeg.addEventListener('loaded-error', listener);
+
+    return function () {
+      ffmpeg.removeEventListener('output', listener);
+      ffmpeg.removeEventListener('progress', listener);
+      ffmpeg.removeEventListener('loaded', listener);
+      ffmpeg.removeEventListener('loaded-error', listener);
+    };
+  }, [ffmpeg]);
+  */
+
+  const [blob, setBlob] = useState<Blob | undefined>(undefined);
+  const [blobURL, setBlobURL] = useState<string>('');
+
+  useEffect(
+    function loadRecordingBlob() {
+      let blobUrl: string = '';
+
+      recording.getBlob().then((blob) => {
+        setBlob(blob);
+        setBlobURL((blobUrl = URL.createObjectURL(blob)));
+      });
+
+      return () => {
+        URL.revokeObjectURL(blobUrl);
+      };
+    },
+    [recording]
+  );
+
+  const recordings = useRecordings();
+
+  const videoElementRef: Ref<HTMLVideoElement> = useRef(null);
+  const [duration, setDuration] = useState(0);
+  const [playRanges, setPlayRanges] = useState<readonly Range[]>([]);
+
+  const onDurationChange = useCallback(function (duration: number) {
+    setDuration(duration * 1000);
+  }, []);
+
+  const onSliderThumbChange = useCallback(function (position: number) {
+    const videoEl = videoElementRef.current;
+    if (videoEl) {
+      videoEl.currentTime = position / 1000;
+    }
+  }, []);
+
+  const onMergedRangesChanged = useCallback(function (ranges: readonly Range[]): void {
+    setPlayRanges(ranges);
+  }, []);
+
+  const onVideoPlaybackTimeUpdate = useCallback(
+    function (this: HTMLVideoElement): void {
+      const videoEl = videoElementRef.current;
+      if (videoEl) {
+        const result = closest(videoEl.currentTime * 1000, playRanges);
+        if (!result.in && result.nextRange) {
+          videoEl.currentTime = result.nextRange[0] / 1000;
+        }
+      }
+    },
+    [playRanges]
+  );
+
+  const onPlayBtnClick = useCallback(function () {
+    videoElementRef.current?.play();
+  }, []);
+
+  const onExportToNewRecording = useCallback(
+    async function exportToNewRecording(): Promise<void> {
+      if (!blob) {
+        return;
+      }
+      const newBlob = await ffmpeg.slice(
+        blob,
+        transformRanges(playRanges, (n) => n / 1000)
+      );
+      const thumbBlob = await recording.getThumbnailBlob();
+      await recordings.add([
+        new Recording(createMemoryBlobResolver(newBlob), createMemoryBlobResolver(thumbBlob), {
+          filename: 'Sliced recording ' + new Date().toISOString(),
+        }),
+      ]);
+    },
+    [ffmpeg, recordings, blob, playRanges, recording]
+  );
+
+  const onExportToNewDownload = useCallback(
+    async function exportToNewDownload(): Promise<void> {
+      if (!blob) {
+        return;
+      }
+      const newBlob = await ffmpeg.slice(
+        blob,
+        transformRanges(playRanges, (n) => n / 1000)
+      );
+
+      triggerBlobDownload(newBlob, recording.filename);
+    },
+    [blob, ffmpeg, playRanges, recording.filename]
+  );
 
   return (
     <div className={classnames('video-player-editor', className)}>
-      <video
-        src={videoSrc}
-        ref={videoRef}
+      <VideoElement
+        onInternalDurationChanged={onDurationChange}
+        ref={videoElementRef}
+        src={blobURL}
         className="video-player"
         controls
         autoPlay={false}
-        preload="metadata"
-        onLoadedMetadata={undefined /*loadedVideoMetadata*/}
-        onDurationChange={undefined /*loadedVideoMetadata*/}
+        preload="auto"
+        onTimeUpdate={onVideoPlaybackTimeUpdate}
+      />
+      <RangesListEditor
+        beforeButtons={
+          <button className="btn" onClick={onPlayBtnClick}>
+            Play
+          </button>
+        }
+        afterButtons={
+          <>
+            <button className="btn" onClick={onExportToNewRecording}>
+              Export selections to new recording
+            </button>
+            <button className="btn" onClick={onExportToNewDownload}>
+              Export selections as a new video download
+            </button>
+          </>
+        }
+        key={`${blobURL}:${duration}`}
+        max={duration}
+        initialRanges={duration ? [makeRange(0, duration)] : []}
+        onSliderThumbChange={onSliderThumbChange}
+        onRangesChanged={undefined /*console.log.bind(console, 'onRangesChanged:')*/}
+        onMergedRangesChanged={onMergedRangesChanged}
       />
     </div>
   );

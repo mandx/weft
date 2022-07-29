@@ -1,3 +1,5 @@
+@import 'shared';
+
 .settings-page {
   max-height: calc(100vh - 10rem);
   display: flex;
@@ -6,15 +8,18 @@
 
   .scroll-container {
     overflow-y: auto;
+    padding: 0 5px 5px 0;
   }
 
   details {
-    border: 1px solid white;
-    padding: 0.5rem;
+    @include square-shadow(true);
+    padding: 1rem;
 
     summary {
       outline-offset: 0.25rem;
       outline-color: #00aaff;
+      font-size: 1.5rem;
+      padding: 0.25em;
     }
 
     &[open] summary {

@@ -1,0 +1,37 @@
+.ranges-editor-container {
+  display: block;
+  position: relative;
+  min-height: 1em;
+  background: silver;
+  margin: 0.5em 0;
+
+  .range-editor-block {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    &:nth-child(even) {
+      background: blue;
+    }
+    &:nth-child(odd) {
+      background: red;
+    }
+
+    .range-editor-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1em;
+
+      &.left {
+        left: 0;
+      }
+
+      &.right {
+        right: 0;
+      }
+    }
+  }
+}

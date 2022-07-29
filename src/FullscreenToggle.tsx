@@ -55,6 +55,7 @@ export default function FullscreenToggle() {
   return (
     <button
       className={classnames(
+        'btn',
         'fullscreen-toggle-button',
         currentlyFullscreen && 'fullscreen-active',
         !currentlyFullscreen && 'fullscreen-inactive'
@@ -63,12 +64,16 @@ export default function FullscreenToggle() {
       disabled={enteringFullscreen || exitingFullscreen}
       onClick={currentlyFullscreen ? exitFullscreen : enterFullscreen}
     >
-      {currentlyFullscreen ? (
-        <FullscreenExitIcon role="presentation" />
-      ) : (
-        <FullscreenIcon role="presentation" />
-      )}
-      {currentlyFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+      <span className="btn-icon">
+        {currentlyFullscreen ? (
+          <FullscreenExitIcon role="presentation" />
+        ) : (
+          <FullscreenIcon role="presentation" />
+        )}
+      </span>
+      <span className="btn-text">
+        {currentlyFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+      </span>
     </button>
   );
 }

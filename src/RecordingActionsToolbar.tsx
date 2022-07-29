@@ -8,8 +8,11 @@ import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash.svg';
 import Recording from './Recording';
 import DownloadRecordingBtn from './DownloadRecording';
 import './RecordingActionsToolbar.scss';
+import { classnames } from './utilities';
 
 interface RecordingActionsToolbarProps {
+  readonly className?: string;
+
   /**
    * The item this element represents
    */
@@ -25,14 +28,24 @@ interface RecordingActionsToolbarProps {
   readonly displayFilename?: boolean | string;
 
   /**
+   * UI to add before the toolbar buttons
+   */
+  beforeButtons?: JSX.Element;
+
+  /**
+   * UI to add after the toolbar buttons
+   */
+  afterButtons?: JSX.Element;
+
+  /**
    * Callback triggered with a new "version" of this item.
    */
-  readonly onEditRecording: (recording: Readonly<Recording>) => void;
+  readonly onEditRecording?: (recording: Readonly<Recording>) => void;
 
   /**
    * Callback triggered when deletion of this item is requested
    */
-  readonly onDeleteRecording: <T>(recording: Readonly<Recording>, event: MouseEvent<T>) => void;
+  readonly onDeleteRecording?: <T>(recording: Readonly<Recording>, event: MouseEvent<T>) => void;
 
   /**
    * Callback triggered when playback of this item is requested.
@@ -43,6 +56,9 @@ interface RecordingActionsToolbarProps {
 export default function RecordingActionsToolbar({
   recording,
   displayFilename,
+  className,
+  beforeButtons,
+  afterButtons,
   onEditRecording,
   onDeleteRecording,
   onPlayRecording,
@@ -52,17 +68,17 @@ export default function RecordingActionsToolbar({
 
   const onDeleteClicked = useCallback(
     function handleDeleteClick<T>(event: MouseEvent<T>): void {
-      onDeleteRecording(recording, event);
+      onDeleteRecording?.(recording, event);
     },
     [recording, onDeleteRecording]
   );
 
-  const onFormSubmitted = useCallback(
+  const onRenameFormSubmitted = useCallback(
     function handleFormSubmit<T>(event: MouseEvent<T>): void {
       event.preventDefault();
 
       const input = inputRef.current;
-      if (editing && input) {
+      if (editing && input && onEditRecording) {
         onEditRecording(recording.cloneWithNewFilename(input.value));
       }
 
@@ -90,23 +106,27 @@ export default function RecordingActionsToolbar({
   );
 
   return (
-    <form onSubmit={onFormSubmitted} className="recording-actions-toolbar">
+    <form
+      onSubmit={onRenameFormSubmitted}
+      className={classnames('recording-actions-toolbar', className)}
+    >
       {editing ? (
-        <input defaultValue={recording.filename} ref={inputRef} className="recording-item-name" />
+        <input
+          type="text"
+          defaultValue={recording.filename}
+          ref={inputRef}
+          className="recording-item-name"
+        />
+      ) : displayFilename === undefined || displayFilename === true ? (
+        <span className="recording-item-name" title={recording.filename}>
+          {recording.filename}
+        </span>
+      ) : typeof displayFilename === 'string' ? (
+        <span className="recording-item-name" title={displayFilename}>
+          {displayFilename}
+        </span>
       ) : (
-        <>
-          {displayFilename === undefined || displayFilename === true ? (
-            <span className="recording-item-name" title={recording.filename}>
-              {recording.filename}
-            </span>
-          ) : typeof displayFilename === 'string' ? (
-            <span className="recording-item-name" title={displayFilename}>
-              {displayFilename}
-            </span>
-          ) : (
-            false
-          )}
-        </>
+        false
       )}
       {editing ? (
         <Fragment>
@@ -126,6 +146,7 @@ export default function RecordingActionsToolbar({
         </Fragment>
       ) : (
         <Fragment>
+          {beforeButtons}
           {!!onPlayRecording && (
             <button
               className="btn"
@@ -146,20 +167,23 @@ export default function RecordingActionsToolbar({
           >
             <PencilIcon className="btn-icon" role="presentation" />
           </button>
+          {!!onDeleteRecording && (
+            <button
+              className="btn"
+              type="button"
+              onClick={onDeleteClicked}
+              title="Delete"
+              aria-label="Delete"
+            >
+              <TrashIcon className="btn-icon" role="presentation" />
+            </button>
+          )}
+          <DownloadRecordingBtn recording={recording} className="btn">
+            <DownloadIcon className="btn-icon" role="presentation" />
+          </DownloadRecordingBtn>
+          {afterButtons}
         </Fragment>
       )}
-      <button
-        className="btn"
-        type="button"
-        onClick={onDeleteClicked}
-        title="Delete"
-        aria-label="Delete"
-      >
-        <TrashIcon className="btn-icon" role="presentation" />
-      </button>
-      <DownloadRecordingBtn recording={recording} className="btn">
-        <DownloadIcon className="btn-icon" role="presentation" />
-      </DownloadRecordingBtn>
     </form>
   );
 }
