@@ -43,11 +43,7 @@ interface RangeItemProps {
 
 function renderRangeItemThumb({ props, isDragged }: IRenderThumbParams) {
   return (
-    <div
-      {...props}
-      className="ranges-list-editor-range-item-thumb"
-      style={props.style}
-    >
+    <div {...props} className="ranges-list-editor-range-item-thumb" style={props.style}>
       <div
         style={{
           height: '16px',
