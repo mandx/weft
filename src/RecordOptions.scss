@@ -1,3 +1,5 @@
+@import 'shared';
+
 @keyframes glowing {
   0% {
     background-color: red;
@@ -13,6 +15,18 @@
   }
 }
 
+@keyframes recording-button-animation {
+  0% {
+    background-color: red;
+  }
+  50% {
+    background-color: maroon;
+  }
+  100% {
+    background-color: red;
+  }
+}
+
 .recording-actions-wrapper {
   position: absolute;
   bottom: -3em;
@@ -23,53 +37,29 @@
   transition-duration: 300ms;
 
   &:hover {
-    bottom: 0;
+    bottom: 10px;
   }
 }
 
 .recording-actions {
+  @include square-shadow;
+
   display: flex;
   align-items: stretch;
-  background: black;
-  color: white;
+  margin-right: 1em;
   padding: 1em;
-  border-radius: 10px;
 
-  > * {
-    margin-left: 1em;
-  }
-
-  button {
-    padding: 0.8em 1em 1em;
-    border-radius: 10px;
-    border: 1px solid silver;
-    display: inline-block;
-    background: black;
+  .btn.recording {
     color: white;
-    font-weight: bold;
-
-    svg {
-      margin-inline-end: 1em;
-      vertical-align: middle;
-    }
-  }
-
-  button.recording {
-    margin-left: 0;
-    border: 0 none;
     background-color: red;
-    color: white;
-    animation: glowing 1300ms infinite;
-
-    &:active {
-      background: maroon;
-      animation: none;
-    }
+    animation: recording-button-animation 1500ms infinite;
   }
 
   .recording-options-container {
     display: flex;
     align-items: stretch;
+    margin-left: 10px;
+    margin-right: 10px;
 
     .recording-options-menu {
       display: none;
@@ -88,12 +78,11 @@
   }
 
   .recording-options-menu {
-    position: absolute;
+    @include square-shadow(true);
+
     bottom: 100%;
-    border-radius: 10px;
-    background: black;
+    position: absolute;
     padding: 1em 1em 0;
-    border: 1px solid silver;
 
     label {
       & > select {

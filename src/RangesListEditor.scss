@@ -1,3 +1,5 @@
+@import 'shared';
+
 .ranges-list-editor {
   box-sizing: border-box;
 
@@ -9,6 +11,7 @@
 
   .ranges-list-editor-range-item {
     display: flex;
+    margin: 0 0 10px;
   }
 
   .ranges-list-editor-range-item-slider-container {
@@ -23,7 +26,31 @@
 
   .ranges-list-editor-ranges-container {
     list-style: none;
-    margin: 0;
     padding: 0;
+  }
+
+  .ranges-list-editor-range-item-track {
+    height: 36px;
+    display: flex;
+    width: 100%;
+  }
+
+  .ranges-list-editor-range-item-track-range {
+    @include square-shadow;
+
+    height: 5px;
+    width: 100%;
+    border-radius: 4px;
+    align-self: center;
+  }
+
+  .ranges-list-editor-range-item-thumb {
+    @include square-shadow;
+
+    height: 32px;
+    width: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 }

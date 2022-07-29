@@ -132,7 +132,7 @@ export default function VideoPlayerEditor({ className, recording }: VideoPlayerE
         }),
       ]);
     },
-    [ffmpeg, recordings.add, blob, playRanges, recording]
+    [ffmpeg, recordings, blob, playRanges, recording]
   );
 
   const onExportToNewDownload = useCallback(

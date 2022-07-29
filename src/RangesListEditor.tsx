@@ -46,23 +46,13 @@ function renderRangeItemThumb({ props, isDragged }: IRenderThumbParams) {
     <div
       {...props}
       className="ranges-list-editor-range-item-thumb"
-      style={{
-        ...props.style,
-        height: '42px',
-        width: '42px',
-        borderRadius: '4px',
-        backgroundColor: '#FFF',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        boxShadow: '0px 2px 6px #AAA',
-      }}
+      style={props.style}
     >
       <div
         style={{
           height: '16px',
           width: '5px',
-          backgroundColor: isDragged ? '#548BF4' : '#CCC',
+          backgroundColor: isDragged ? '#000' : '#CCC',
         }}
       />
     </div>
@@ -79,26 +69,18 @@ function renderRangeItemTrack(
       className="ranges-list-editor-range-item-track"
       onMouseDown={props.onMouseDown}
       onTouchStart={props.onTouchStart}
-      style={{
-        ...props.style,
-        height: '36px',
-        display: 'flex',
-        width: '100%',
-      }}
+      style={props.style}
     >
       <div
         ref={props.ref}
+        className="ranges-list-editor-range-item-track-range"
         style={{
-          height: '5px',
-          width: '100%',
-          borderRadius: '4px',
           background: getTrackBackground({
             values: [range[0], range[1]],
-            colors: ['#ccc', '#548BF4', '#ccc'],
+            colors: ['#fff', '#999', '#fff'],
             min: 0,
             max,
           }),
-          alignSelf: 'center',
         }}
       >
         {children}

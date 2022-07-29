@@ -1,0 +1,13 @@
+@mixin square-shadow($include-active: false) {
+  background: white;
+  border: 3px solid black;
+  box-shadow: 5px 5px black;
+  color: black;
+
+  @if $include-active {
+    &:active {
+      transform: translate(3px, 3px);
+      box-shadow: 2px 2px black;
+    }
+  }
+}

@@ -58,14 +58,14 @@ export default function RecordingPlayer({ editMode }: RecordingPlayerProps): JSX
         historyContext?.history.push('/');
       });
     },
-    [historyContext, recordings.delete]
+    [historyContext, recordings]
   );
 
   const editRecording = useCallback(
     function handleEditRecording(recording: Readonly<Recording>): Promise<void> {
       return recordings.update([recording]).then(noop);
     },
-    [recordings.update]
+    [recordings]
   );
 
   if (!recording) {

@@ -54,7 +54,7 @@ function HomescreenItem({ recording, onDeleteRecordings }: RecordingItemProps) {
     function <T>(recording: Readonly<Recording>, event: MouseEvent<T>): void {
       onDeleteRecordings([recording], event);
     },
-    [recording, onDeleteRecordings]
+    [onDeleteRecordings]
   );
 
   return (
@@ -66,8 +66,8 @@ function HomescreenItem({ recording, onDeleteRecordings }: RecordingItemProps) {
         src={thumbnailUrl}
       />
       <RecordingActionsToolbar
+        className="homescreen-recording-actions"
         recording={recording}
-        displayFilename={false}
         beforeButtons={
           <>
             <Link

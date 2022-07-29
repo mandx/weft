@@ -3,6 +3,10 @@
   flex-direction: column;
   max-height: calc(100vh - 12rem);
 
+  .recording-actions-toolbar {
+    margin-bottom: 1em;
+  }
+
   .recording-not-found,
   .recording-loading {
     position: relative;

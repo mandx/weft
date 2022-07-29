@@ -8,8 +8,11 @@ import { ReactComponent as TrashIcon } from 'bootstrap-icons/icons/trash.svg';
 import Recording from './Recording';
 import DownloadRecordingBtn from './DownloadRecording';
 import './RecordingActionsToolbar.scss';
+import { classnames } from './utilities';
 
 interface RecordingActionsToolbarProps {
+  readonly className?: string;
+
   /**
    * The item this element represents
    */
@@ -53,6 +56,7 @@ interface RecordingActionsToolbarProps {
 export default function RecordingActionsToolbar({
   recording,
   displayFilename,
+  className,
   beforeButtons,
   afterButtons,
   onEditRecording,
@@ -102,9 +106,17 @@ export default function RecordingActionsToolbar({
   );
 
   return (
-    <form onSubmit={onRenameFormSubmitted} className="recording-actions-toolbar">
+    <form
+      onSubmit={onRenameFormSubmitted}
+      className={classnames('recording-actions-toolbar', className)}
+    >
       {editing ? (
-        <input defaultValue={recording.filename} ref={inputRef} className="recording-item-name" />
+        <input
+          type="text"
+          defaultValue={recording.filename}
+          ref={inputRef}
+          className="recording-item-name"
+        />
       ) : displayFilename === undefined || displayFilename === true ? (
         <span className="recording-item-name" title={recording.filename}>
           {recording.filename}

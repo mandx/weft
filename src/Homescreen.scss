@@ -1,3 +1,5 @@
+@import 'shared';
+
 .homescreen {
   display: flex;
   flex: 1;
@@ -35,15 +37,9 @@
   }
 
   .homescreen-recording {
-    background-color: white;
-    border-radius: 5px;
-    border: 5px solid silver;
-    box-sizing: border-box;
-    padding: 5px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    max-width: 30rem;
+    @include square-shadow;
+
+    padding: 0.75em;
 
     .homescreen-recording-thumbnail {
       display: block;
@@ -51,7 +47,6 @@
     }
 
     .homescreen-recording-actions {
-      display: flex;
       margin-block-start: 0.5em;
     }
   }

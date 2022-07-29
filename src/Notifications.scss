@@ -1,14 +1,16 @@
+@import 'shared';
+
 .notifications-container {
   position: absolute;
   right: 1em;
-  bottom: 1em;
+  top: 1em;
   margin: 0;
   list-style: none;
   padding: 0;
 
   .notification {
-    background: white;
-    border-radius: 10px;
+    @include square-shadow(true);
+
     padding: 1em;
     margin-block-start: 0.5em;
   }
