@@ -53,3 +53,7 @@ interface MediaDevices extends EventTarget {
 interface HTMLCanvasElement extends HTMLElement {
   captureStream(frameRate: number): MediaStream;
 }
+
+interface DocumentOrShadowRoot {
+  adoptedStyleSheets: CSSStyleSheet[];
+}

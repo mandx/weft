@@ -193,3 +193,7 @@ export function triggerBlobDownload(blob: Blob, filename: string): void {
     document.body.removeChild(anchor);
   });
 }
+
+export function camelCaseToDashCase(s: string): string {
+  return s.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
+}

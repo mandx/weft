@@ -99,3 +99,17 @@ export function useEscKey(callback?: (event: Event) => void): void {
     return undefined;
   }, [callback]);
 }
+
+export function useDynamicStylesheet() {
+  const sheet = useConstant(() => new CSSStyleSheet());
+
+  useEffect(function adoptStylesheet() {
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+
+    return function unAdoptStylesheet() {
+      document.adoptedStyleSheets = document.adoptedStyleSheets.filter((s) => s !== sheet);
+    };
+  });
+
+  return sheet;
+}
