@@ -6,18 +6,19 @@ import Recorder from './Recorder';
 import Recording from './Recording';
 import Homescreen from './Homescreen';
 import Notifications, { createNotificationsEmitter } from './Notifications';
-import { useConstant } from './hooks';
+import { useConstant, useDynamicStylesheet } from './hooks';
 import { createHistory, Fallback, Link, Route, Router, Switch } from './Router';
 import { useRecordings, useStorageEstimate } from './storage-swr';
 import RecordingPlayer from './RecordingPlayer';
 import AboutPage from './AboutPage';
 import StorageEstimateBar from './StorageEstimateBar';
 import Settings from './Settings';
-import { AppBackground, applyBackground } from './app-backgrounds';
+import { AppBackground, applyBackgroundToStylesheet } from './app-backgrounds';
 import { noop, loadFromLocalStorage, saveToLocalStorage } from './utilities';
 import { AppBackground as AppBackgroundRuntype } from './runtypes';
 
 export default function App() {
+  const backgroundsStylesheet = useDynamicStylesheet();
   const notificationsEmitter = useConstant(createNotificationsEmitter);
   const history = useConstant(createHistory);
   const recordings = useRecordings();
@@ -39,20 +40,20 @@ export default function App() {
   );
 
   const selectedAppBackground = useCallback(function appBgHandler(background: AppBackground) {
-    applyBackground(background, document.getElementById('root')!);
+    applyBackgroundToStylesheet(background, backgroundsStylesheet);
     saveToLocalStorage('selected-app-background', background);
-  }, []);
+  }, [backgroundsStylesheet]);
 
   useEffect(function loadSavedAppBg() {
     try {
-      applyBackground(
+      applyBackgroundToStylesheet(
         loadFromLocalStorage('selected-app-background', AppBackgroundRuntype),
-        document.getElementById('root')!
+        backgroundsStylesheet
       );
     } catch (error) {
       console.info('Error loading app background', `${error}`);
     }
-  }, []);
+  }, [backgroundsStylesheet]);
 
   useEffect(
     function exposeNotifications() {

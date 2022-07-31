@@ -4,7 +4,7 @@ import { MediaAccess } from './RecordOptions';
 
 export * from 'simple-runtypes';
 
-const cssString = st.string({ minLength: 5, trim: true });
+const cssString = st.string({ trim: true });
 export const SloppyAppBackground = st.sloppyRecord({
   $name: cssString,
   image: st.string({ match: /^url\("data:image\//i }),

@@ -75,7 +75,7 @@ export function queryStorageStats(): Promise<Readonly<StorageEstimate>> {
   return navigator.storage.estimate();
 }
 
-const STORAGE_ESTIMATE_SWR_KEY = 'recordings';
+const STORAGE_ESTIMATE_SWR_KEY = 'storage_estimate';
 
 export function useStorageEstimate():
   | { status: 'loading' }
@@ -100,8 +100,6 @@ export function useStorageEstimate():
 }
 
 export interface RecordingsStorage {
-  // readonly list: readonly Readonly<Recording>[];
-
   readonly data:
     | { readonly status: 'loaded'; readonly list: readonly Readonly<Recording>[] }
     | { readonly status: 'loading' }

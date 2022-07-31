@@ -1,4 +1,5 @@
 import { CSSProperties } from 'react';
+import { camelCaseToDashCase } from './utilities';
 
 export interface AppBackground {
   $name: string;
@@ -46,11 +47,44 @@ export function isAppBackgroundArray(value: unknown): value is AppBackground[] {
   );
 }
 
-export function applyBackground(background: AppBackground, element: HTMLElement): void {
+export function applyBackgroundToElement(background: AppBackground, element: HTMLElement): void {
   const cssProps = backgroundAsStyles(background);
   for (const k of Object.keys(cssProps)) {
     if (k[0] !== '$') {
-      element.style[k as any] = (cssProps as any)[k];
+      element.style.setProperty('--' + camelCaseToDashCase(k), (cssProps as any)[k] || null);
     }
   }
+}
+
+const DEFAULT_CSS_VALUES = {
+  backgroundImage: 'none',
+  backgroundAttachment: 'scroll',
+  backgroundColor: 'transparent',
+  backgroundPosition: '0% 0%',
+  backgroundRepeat: 'repeat',
+  backgroundSize: 'auto auto',
+} as const;
+
+export function applyBackgroundToStylesheet(
+  background: AppBackground,
+  stylesheet: CSSStyleSheet
+): void {
+  const cssProps = backgroundAsStyles(background);
+
+  const cssRule = `:root {
+    ${Object.keys(cssProps)
+      .map(
+        (k) =>
+          `--${camelCaseToDashCase(k)} : ${
+            cssProps[k as keyof typeof DEFAULT_CSS_VALUES] ||
+            DEFAULT_CSS_VALUES[k as keyof typeof DEFAULT_CSS_VALUES]
+          }`
+      )
+      .join(';\n')}
+  }`;
+
+  while (stylesheet.cssRules.length) {
+    stylesheet.deleteRule(0);
+  }
+  stylesheet.insertRule(cssRule);
 }
