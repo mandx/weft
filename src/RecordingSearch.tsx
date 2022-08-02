@@ -4,6 +4,7 @@ import { classnames } from './utilities';
 import Recording from './Recording';
 import { Link } from './Router';
 import { useDebouncedValue } from './hooks';
+import * as paths from './app-routes';
 
 import './RecordingSearch.scss';
 
@@ -48,7 +49,9 @@ export default function RecordingSearch({ recordings, ...props }: RecordingSearc
           <ul className="recordings-list-compact">
             {recordings.map((recording) => (
               <li key={recording.databaseId}>
-                <Link to={`/play/${recording.databaseId}`}>{recording.filename}</Link>
+                <Link path={paths.recordingPlay} params={{ recordingId: recording.databaseId }}>
+                  {recording.filename}
+                </Link>
               </li>
             ))}
           </ul>
@@ -59,7 +62,9 @@ export default function RecordingSearch({ recordings, ...props }: RecordingSearc
           <ul className="recordings-list-compact">
             {filteredRecordings.map((recording) => (
               <li key={recording.databaseId}>
-                <Link to={`/play/${recording.databaseId}`}>{recording.filename}</Link>
+                <Link path={paths.recordingPlay} params={{ recordingId: recording.databaseId }}>
+                  {recording.filename}
+                </Link>
               </li>
             ))}
           </ul>

@@ -7,8 +7,9 @@ import Recording from './Recording';
 import Homescreen from './Homescreen';
 import Notifications, { createNotificationsEmitter } from './Notifications';
 import { useConstant, useDynamicStylesheet } from './hooks';
-import { createHistory, Fallback, Link, Route, Router, Switch } from './Router';
-import { useRecordings, useStorageEstimate } from './storage-swr';
+import { createHistory, PathHistory, Fallback, Link, Route, Router, Switch } from './Router';
+import * as paths from './app-routes';
+import { useRecordings } from './storage-swr';
 import RecordingPlayer from './RecordingPlayer';
 import AboutPage from './AboutPage';
 import StorageEstimateBar from './StorageEstimateBar';
@@ -20,14 +21,13 @@ import { AppBackground as AppBackgroundRuntype } from './runtypes';
 export default function App() {
   const backgroundsStylesheet = useDynamicStylesheet();
   const notificationsEmitter = useConstant(createNotificationsEmitter);
-  const history = useConstant(createHistory);
+  const history = useConstant(() => new PathHistory(createHistory()));
   const recordings = useRecordings();
-  const storageEstimate = useStorageEstimate();
 
   const addNewRecording = useCallback(
     function addNewDownloadUrlCb(recording: Recording): void {
       recordings.add([recording]);
-      history.push('/');
+      history.push(paths.index, undefined);
     },
     [history, recordings]
   );
@@ -39,21 +39,39 @@ export default function App() {
     [history]
   );
 
-  const selectedAppBackground = useCallback(function appBgHandler(background: AppBackground) {
-    applyBackgroundToStylesheet(background, backgroundsStylesheet);
-    saveToLocalStorage('selected-app-background', background);
-  }, [backgroundsStylesheet]);
+  const selectedAppBackground = useCallback(
+    function appBgHandler(background: AppBackground) {
+      applyBackgroundToStylesheet(background, backgroundsStylesheet);
+      saveToLocalStorage('selected-app-background', background);
+    },
+    [backgroundsStylesheet]
+  );
 
-  useEffect(function loadSavedAppBg() {
-    try {
-      applyBackgroundToStylesheet(
-        loadFromLocalStorage('selected-app-background', AppBackgroundRuntype),
-        backgroundsStylesheet
+  const handleRouteNotMatched = useCallback(
+    function (route: string): void {
+      notificationsEmitter.emit(
+        <>
+          The URL <code>{route}</code> was not found or understood!
+        </>,
+        'warn'
       );
-    } catch (error) {
-      console.info('Error loading app background', `${error}`);
-    }
-  }, [backgroundsStylesheet]);
+    },
+    [notificationsEmitter]
+  );
+
+  useEffect(
+    function loadSavedAppBg() {
+      try {
+        applyBackgroundToStylesheet(
+          loadFromLocalStorage('selected-app-background', AppBackgroundRuntype),
+          backgroundsStylesheet
+        );
+      } catch (error) {
+        console.info('Error loading app background', `${error}`);
+      }
+    },
+    [backgroundsStylesheet]
+  );
 
   useEffect(
     function exposeNotifications() {
@@ -64,7 +82,7 @@ export default function App() {
 
   const onPlayRecording = useCallback(
     function handlePlayRecording(recording: Readonly<Recording>): void {
-      history.push(`/play/${recording.databaseId}`);
+      history.push(paths.recordingPlay, { recordingId: recording.databaseId });
     },
     [history]
   );
@@ -74,7 +92,7 @@ export default function App() {
       <nav className="main-nav">
         <header className="main-header">
           <h1>
-            <Link to="/" className="start-page-link btn">
+            <Link path={paths.index} className="start-page-link btn">
               <WebcamFillIcon className="btn-icon" width={35} height={35} />
               <span className="btn-text">Weft</span>
             </Link>
@@ -82,36 +100,29 @@ export default function App() {
         </header>
       </nav>
       <Switch>
-        <Route route="/record">
+        <Route path={paths.record}>
           <Recorder
             onNewRecording={addNewRecording}
             emitNotification={notificationsEmitter.emit}
             onRecordingStateChange={noop}
           />
         </Route>
-        <Route route="/play/:recordingId">
+        <Route path={paths.recordingPlay}>
           <RecordingPlayer />
         </Route>
-        <Route route="/play/:recordingId/edit">
+        <Route path={paths.recordingEdit}>
           <RecordingPlayer editMode />
         </Route>
-        <Route route="/about">
+        <Route path={paths.about}>
           <AboutPage onCancel={historyGoBack}>
-            {storageEstimate.status === 'loaded' && (
-              <StorageEstimateBar estimate={storageEstimate.estimate} />
-            )}
+            <StorageEstimateBar />
           </AboutPage>
         </Route>
-        <Route route="/settings">
+        <Route path={paths.settings}>
           <Settings onCancel={historyGoBack} onSelectedAppBackground={selectedAppBackground} />
         </Route>
-        <Fallback>
-          <Homescreen
-            storageEstimate={
-              storageEstimate.status === 'loaded' ? storageEstimate.estimate : undefined
-            }
-            onPlayRecording={onPlayRecording}
-          />
+        <Fallback onRouteNotMatched={handleRouteNotMatched}>
+          <Homescreen onPlayRecording={onPlayRecording} />
         </Fallback>
       </Switch>
       <Notifications emitter={notificationsEmitter} />

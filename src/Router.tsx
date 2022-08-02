@@ -1,30 +1,88 @@
 import React, {
+  useSyncExternalStore,
   Children,
   createContext,
   ReactElement,
   ReactNode,
   useContext,
-  useEffect,
-  useState,
   HTMLProps,
+  cloneElement,
+  useCallback,
+  MouseEvent,
 } from 'react';
-import { createBrowserHistory } from 'history';
+import { Blocker, createBrowserHistory, Listener } from 'history';
+import { Params, Path } from 'static-path';
 import { pathToRegexp, Key as RouteKey } from 'path-to-regexp';
 import { useConstant } from './hooks';
-
-function identity<T>(x: T): T {
-  return x;
-}
+import { identity } from './utilities';
 
 export const createHistory = createBrowserHistory;
-type HistoryImpl = ReturnType<typeof createHistory>;
+type HistoryBackend = ReturnType<typeof createHistory>;
+
+export class PathHistory implements Omit<HistoryBackend, 'createHref' | 'push' | 'replace'> {
+  public readonly inner: HistoryBackend;
+
+  constructor(history: HistoryBackend) {
+    this.inner = history;
+  }
+
+  get action() {
+    return this.inner.action;
+  }
+
+  get location() {
+    return this.inner.location;
+  }
+
+  go(delta: number) {
+    return this.inner.go(delta);
+  }
+
+  back() {
+    return this.inner.back();
+  }
+
+  forward() {
+    return this.inner.forward();
+  }
+
+  listen(listener: Listener) {
+    return this.inner.listen(listener);
+  }
+
+  block(blocker: Blocker) {
+    return this.inner.block(blocker);
+  }
+
+  createHref<Pattern extends string>(
+    path: Path<Pattern>,
+    params: keyof Params<Pattern> extends 0 ? undefined : Params<Pattern>
+  ): string {
+    return this.inner.createHref(path((params || {}) as Params<Pattern>));
+  }
+
+  push<Pattern extends string>(
+    path: Path<Pattern>,
+    params: keyof Params<Pattern> extends 0 ? undefined : Params<Pattern>,
+    state?: any
+  ): void {
+    return this.inner.push(path((params || {}) as Params<Pattern>), state);
+  }
+
+  replace<Pattern extends string>(
+    path: Path<Pattern>,
+    params: keyof Params<Pattern> extends 0 ? undefined : Params<Pattern>,
+    state?: any
+  ): void {
+    return this.inner.replace(path((params || {}) as Params<Pattern>), state);
+  }
+}
+
+type HistoryImpl = PathHistory;
 
 type StringParams = { [paramName: string]: string | undefined };
 
-type HistoryContextInner = {
-  history: HistoryImpl;
-};
-export const HistoryContext = createContext<HistoryContextInner | undefined>(undefined);
+export const HistoryContext = createContext<HistoryImpl | undefined>(undefined);
 const RouteParamsContext = createContext<StringParams | undefined>(undefined);
 
 class CompiledRoutesCache {
@@ -52,8 +110,11 @@ class CompiledRoutesCache {
     return result;
   }
 
-  isMatch(route: string, path: string): StringParams | undefined {
-    const compiled = this.get(route);
+  isMatch<Pattern extends string>(
+    route: string | Path<Pattern>,
+    path: string
+  ): StringParams | undefined {
+    const compiled = this.get(typeof route === 'string' ? route : route.pattern);
     const regexpMatch = compiled.regexp.exec(path);
     if (!regexpMatch) {
       return undefined;
@@ -68,12 +129,19 @@ class CompiledRoutesCache {
   }
 }
 
-function isRouteElement(element: unknown): element is ReactElement<RouteProps, typeof Route> {
+function isPath<Pattern extends string>(value: unknown): value is Path<Pattern> {
   return (
-    !!element &&
-    (element as any)?.type === Route &&
-    typeof (element as any)?.props?.route === 'string'
+    typeof value === 'function' &&
+    typeof (value as any).pattern === 'string' &&
+    Array.isArray((value as any).parts) &&
+    typeof (value as any).path === 'function'
   );
+}
+
+function isRouteElement<Pattern extends string>(
+  element: unknown
+): element is ReactElement<RouteProps<Pattern>, typeof Route> {
+  return !!element && (element as any)?.type === Route && isPath((element as any)?.props?.path);
 }
 
 function isSwitchElement(element: unknown): element is ReactElement<SwitchProps, typeof Switch> {
@@ -92,26 +160,18 @@ export interface RouterProps {
 }
 
 export function Router({ history, children }: RouterProps) {
-  const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
   const compiledRoutesCache = useConstant<CompiledRoutesCache>(() => new CompiledRoutesCache());
 
-  useEffect(() => {
-    // `history.listen` returns an "unsubscribe" function, so we just
-    // return that from our effect function.
-    return history.listen((historyEvent) => {
-      setCurrentPath((pathname) => {
-        return pathname === historyEvent.location.pathname
-          ? pathname
-          : historyEvent.location.pathname;
-      });
-    });
-  }, [history]);
+  const currentPath: string = useSyncExternalStore(
+    (onStoreChange) => history.listen(onStoreChange),
+    () => window.location.pathname
+  );
 
   return (
-    <HistoryContext.Provider value={{ history }}>
+    <HistoryContext.Provider value={history}>
       {Children.map(children, (child) => {
         if (isRouteElement(child)) {
-          const routeParams = compiledRoutesCache.isMatch(child.props.route, currentPath);
+          const routeParams = compiledRoutesCache.isMatch(child.props.path.pattern, currentPath);
           if (routeParams) {
             const routeChildren = child.props.children;
             return (
@@ -123,11 +183,14 @@ export function Router({ history, children }: RouterProps) {
         }
 
         if (isSwitchElement(child) && Children.count(child.props.children)) {
-          let fallback;
+          let fallback: ReturnType<typeof cloneElement<FallbackProps>> | undefined = undefined;
 
           for (const switchChild of Children.map(child.props.children, identity) || []) {
             if (isRouteElement(switchChild)) {
-              const routeParams = compiledRoutesCache.isMatch(switchChild.props.route, currentPath);
+              const routeParams = compiledRoutesCache.isMatch(
+                switchChild.props.path.pattern,
+                currentPath
+              );
               if (routeParams) {
                 return (
                   <RouteParamsContext.Provider value={routeParams}>
@@ -142,7 +205,7 @@ export function Router({ history, children }: RouterProps) {
               isFallbackElement(switchChild) &&
               Children.count(switchChild.props.children)
             ) {
-              fallback = switchChild;
+              fallback = cloneElement(switchChild, { routeNoMatched: currentPath });
             }
           }
 
@@ -155,50 +218,57 @@ export function Router({ history, children }: RouterProps) {
   );
 }
 
-interface LinkProps {
-  readonly to: string;
+type LinkToPathProps<Pattern extends string> = {
+  readonly path: Path<Pattern>;
   readonly className?: string;
   readonly children?: ReactNode;
-}
+} & (keyof Params<Pattern> extends 0
+  ? { readonly params?: undefined }
+  : { readonly params: Params<Pattern> });
 
-export function Link({
-  to,
-  children,
+export function LinkToPath<Pattern extends string>({
+  path,
+  params,
   className,
+  children,
   ...props
-}: LinkProps & HTMLProps<HTMLAnchorElement>) {
+}: LinkToPathProps<Pattern> & HTMLProps<HTMLAnchorElement>) {
+  const realizedPath = path(params || ({} as Params<Pattern>));
+  const history = useHistory();
+  const handleClick = useCallback(
+    (event: MouseEvent) => {
+      if (history) {
+        event.preventDefault();
+        history.inner.push(realizedPath);
+      }
+    },
+    [realizedPath, history]
+  );
+
   return (
-    <HistoryContext.Consumer>
-      {(context) => (
-        <a
-          {...props}
-          className={
-            /* TODO: toggle a class name depending if the link is "active" or not*/
-            className
-          }
-          href={to}
-          onClick={(event) => {
-            const { history } = context || {};
-            if (history) {
-              event.preventDefault();
-              history.push(to);
-            }
-          }}
-        >
-          {children}
-        </a>
-      )}
-    </HistoryContext.Consumer>
+    <a
+      {...props}
+      className={
+        /* TODO: toggle a class name depending if the link is "active" or not*/
+        className
+      }
+      href={realizedPath}
+      onClick={handleClick}
+    >
+      {children}
+    </a>
   );
 }
+
+export const Link = LinkToPath;
 
 type RouteMatchRenderer = (params: StringParams) => JSX.Element;
 type RouteChildren = ReactNode | RouteMatchRenderer;
 
-interface RouteProps {
-  readonly route: string;
+type RouteProps<Pattern extends string> = {
+  readonly path: Path<Pattern>;
   readonly children?: RouteChildren;
-}
+};
 
 /**
  * Defines a route within a router: `route` prop will be an Express-like
@@ -207,7 +277,7 @@ interface RouteProps {
  *
  * TODO: Allow for defining function-as-children
  */
-export function Route(props: RouteProps) {
+export function Route<Pattern extends string>(props: RouteProps<Pattern>) {
   return <>{props.children}</>;
 }
 
@@ -220,14 +290,27 @@ export function Switch(props: SwitchProps) {
 }
 
 interface FallbackProps {
+  routeNoMatched?: string;
+  onRouteNotMatched?: (route: string) => void;
   readonly children?: ReactNode;
 }
 
-export function Fallback(props: FallbackProps) {
-  return <>{props.children}</>;
+export function Fallback({ routeNoMatched, onRouteNotMatched, children }: FallbackProps) {
+  const routesNotFoundAndSeen = useConstant(() => {
+    const seen = new Set<string>();
+    seen.add('/');
+    return seen;
+  });
+
+  if (onRouteNotMatched && routeNoMatched && !routesNotFoundAndSeen.has(routeNoMatched)) {
+    routesNotFoundAndSeen.add(routeNoMatched);
+    onRouteNotMatched(routeNoMatched);
+  }
+
+  return <>{children}</>;
 }
 
-export function useHistory() {
+export function useHistory(): HistoryImpl | undefined {
   return useContext(HistoryContext);
 }
 

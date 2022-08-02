@@ -4,7 +4,7 @@ import useSWR, { mutate as mutateGlobal } from 'swr';
 
 import { useConstant } from './hooks';
 import Recording, { BlobResolver, DatabaseID } from './Recording';
-import { noop } from './utilities';
+import { noop, MakeRequired } from './utilities';
 
 export interface RecordingRow {
   readonly id: DatabaseID;
@@ -79,8 +79,9 @@ const STORAGE_ESTIMATE_SWR_KEY = 'storage_estimate';
 
 export function useStorageEstimate():
   | { status: 'loading' }
-  | { status: 'loaded'; estimate: Readonly<StorageEstimate> }
-  | { status: 'error'; reason: unknown } {
+  | { status: 'error'; reason: unknown }
+  | { status: 'loaded'; estimate: Readonly<MakeRequired<StorageEstimate, 'usage' | 'quota'>> }
+  | { status: 'indeterminate'; estimate: Readonly<StorageEstimate> } {
   const { data, error } = useSWR<Readonly<StorageEstimate>, unknown>(
     STORAGE_ESTIMATE_SWR_KEY,
     () => {
@@ -93,7 +94,13 @@ export function useStorageEstimate():
   }
 
   if (data) {
-    return { status: 'loaded', estimate: data };
+    const { usage, quota } = data;
+
+    if (typeof usage === 'number' && typeof quota === 'number') {
+      return { status: 'loaded', estimate: { quota, usage } };
+    }
+
+    return { status: 'indeterminate', estimate: { quota, usage } };
   }
 
   return { status: 'loading' };

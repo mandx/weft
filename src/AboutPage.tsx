@@ -27,6 +27,14 @@ export default function AboutPage({ className, children, onCancel }: AboutPagePr
       </p>
 
       <p>
+        Styling is a bit all over the place; please bear with me while I "master" <em>*sob*</em> the
+        dark arts of{' '}
+        <a rel="noreferrer" href="https://en.wikipedia.org/wiki/CSS" target="_blank">
+          Cascading Style Sheets.
+        </a>
+      </p>
+
+      <p>
         <strong>*</strong> At the moment, this app is offline <em>*only*</em>; all the data is saved
         to your{' '}
         <a title="IndexedDB" href="https://developer.mozilla.org/en-US/docs/Glossary/IndexedDB">

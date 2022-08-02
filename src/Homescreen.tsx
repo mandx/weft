@@ -1,4 +1,4 @@
-import { useCallback, /*useRef,*/ useState, MouseEvent, useEffect } from 'react';
+import { useCallback, useState, MouseEvent, useEffect } from 'react';
 import { ReactComponent as EmojiLaughingIcon } from 'bootstrap-icons/icons/emoji-laughing.svg';
 import { ReactComponent as GearIcon } from 'bootstrap-icons/icons/gear.svg';
 import { ReactComponent as CropIcon } from 'bootstrap-icons/icons/crop.svg';
@@ -9,6 +9,7 @@ import { Link } from './Router';
 import './Homescreen.scss';
 import Recording from './Recording';
 import RecordingActionsToolbar from './RecordingActionsToolbar';
+import * as paths from './app-routes';
 
 interface RecordingItemProps {
   /**
@@ -74,14 +75,16 @@ function HomescreenItem({ recording, onDeleteRecordings }: RecordingItemProps) {
               className="btn"
               title="Play"
               aria-label="Play"
-              to={`/play/${recording.databaseId}`}
+              path={paths.recordingPlay}
+              params={{ recordingId: recording.databaseId }}
             >
               <PlayIcon className="btn-icon" role="presentation" />
             </Link>
 
             <Link
               className="btn"
-              to={`/play/${recording.databaseId}/edit`}
+              path={paths.recordingEdit}
+              params={{ recordingId: recording.databaseId }}
               title="Trim"
               aria-label="Trim"
             >
@@ -100,8 +103,6 @@ export interface HomescreenProps {
    * Callback triggered when playback of an item is requested.
    */
   readonly onPlayRecording: RecordingItemProps['onPlayRecording'];
-
-  readonly storageEstimate?: Readonly<StorageEstimate>;
 }
 
 export default function Homescreen({ onPlayRecording }: HomescreenProps) {
@@ -143,16 +144,21 @@ export default function Homescreen({ onPlayRecording }: HomescreenProps) {
 
   return (
     <section className="homescreen">
-      <Link to="/record" className="start-recording btn">
+      <Link path={paths.record} className="start-recording btn">
         Start Recording
       </Link>
       {content}
+
+      {/*
+      <StorageEstimateBar />
+      */}
+
       <div className="pages-links">
-        <Link className="settings-page-link btn" to="/settings">
+        <Link className="settings-page-link btn" path={paths.settings}>
           <GearIcon className="btn-icon" />
           <span className="btn-text">Settings</span>
         </Link>
-        <Link className="about-page-link btn" to="/about">
+        <Link className="about-page-link btn" path={paths.about}>
           <EmojiLaughingIcon className="btn-icon" />
           <span className="btn-text">About Weft</span>
         </Link>
