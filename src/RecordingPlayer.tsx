@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ReactComponent as QuestionOctagonIcon } from 'bootstrap-icons/icons/question-octagon.svg';
 
 import { useRecordings } from './storage-swr';
-import { useRouteParams } from './Router';
+import { Link, useHistory, useRouteParams } from './Router';
 import SectionPage from './SectionPage';
 import Recording from './Recording';
-import { Link, HistoryContext } from './Router';
 import RecordingSearch from './RecordingSearch';
 import VideoElement from './VideoElement';
 import VideoPlayerEditor from './VideoPlayerEditor';
+import * as paths from './app-routes';
 
 import './RecordingPlayer.scss';
 import RecordingActionsToolbar from './RecordingActionsToolbar';
@@ -50,15 +50,15 @@ export default function RecordingPlayer({ editMode }: RecordingPlayerProps): JSX
     [recording]
   );
 
-  const historyContext = useContext(HistoryContext);
+  const history = useHistory();
 
   const deleteRecording = useCallback(
     function handleDeleteRecording(recording: Readonly<Recording>): Promise<void> {
       return recordings.delete([recording]).then(() => {
-        historyContext?.history.push('/');
+        history?.push(paths.index, undefined);
       });
     },
-    [historyContext, recordings]
+    [history, recordings]
   );
 
   const editRecording = useCallback(
@@ -78,18 +78,19 @@ export default function RecordingPlayer({ editMode }: RecordingPlayerProps): JSX
             {recordings.data.status === 'loaded' && recordings.data.list.length ? (
               <>
                 You can{' '}
-                <Link className="home-link" to="/">
+                <Link className="home-link" path={paths.index}>
                   go back home
                 </Link>
-                , create a <Link to="/record">new recording</Link> or play one of your saved ones.
+                , create a <Link path={paths.record}>new recording</Link> or play one of your saved
+                ones.
               </>
             ) : (
               <>
                 You can{' '}
-                <Link className="home-link" to="/">
+                <Link className="home-link" path={paths.index}>
                   go back home
                 </Link>{' '}
-                or create a <Link to="/record">new recording</Link>.
+                or create a <Link path={paths.record}>new recording</Link>.
               </>
             )}
           </p>

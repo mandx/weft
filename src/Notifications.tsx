@@ -34,11 +34,14 @@ export function createNotificationsEmitter(): NotificationsEmitter {
   return {
     emit(content: ReactNode, level: NotificationLevel = 'info') {
       contents.push([content, level]);
-      drain();
+      if (handlers.length) {
+        drain();
+      }
     },
 
     on(handler: NotificationHandler) {
       handlers.push(handler);
+      drain();
     },
 
     off(handler: NotificationHandler) {

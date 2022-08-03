@@ -197,3 +197,6 @@ export function triggerBlobDownload(blob: Blob, filename: string): void {
 export function camelCaseToDashCase(s: string): string {
   return s.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
 }
+
+type Required<T, K extends keyof T> = T & { [P in K]-?: T[P] };
+export type MakeRequired<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>> & Required<T, K>;

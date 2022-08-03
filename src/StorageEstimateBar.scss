@@ -1,90 +1,30 @@
+@import 'shared';
+
 .storage-estimate-bar {
-  position: relative;
-  margin-bottom: 1em;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0.5em;
 
-  & > meter {
-    /**
-     * 1. Adding a border directly to the meter element provides a border
-     * for Firefox and Safari, but not for Chrome. Using ::-webkit-meter-bar
-     * will add a border for Chrome, but will double up a border for Safari.
-     * Using a box-shadow will allow all to have a similar "border"
-     * 2. A transparent border is still added for high contrast mode.
-     */
+  @include square-shadow;
 
-    & {
-      background: #efefef;
-      border-radius: 8px;
-      border: 1px solid transparent;
-      box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.15) inset, 0 0 0 1px #333; /* 1 */
-      height: 1.5em;
-      width: 100%;
-      display: block;
+  progress {
+    -webkit-appearance: none;
+    width: auto;
+    border: 0 none;
+    background: transparent;
+
+    &::-webkit-progress-bar {
+      background-color: transparent;
     }
 
-    /* WebKit */
-    &::-webkit-meter-bar {
-      background: #efefef;
-      border: 1px solid transparent; /* 2 */
-      border-radius: 8px;
+    &::-webkit-progress-value {
+      @include tiny-checkers;
     }
 
-    &::-webkit-meter-optimum-value,
-    &::-webkit-meter-suboptimum-value,
-    &::-webkit-meter-even-less-good-value {
-      border-radius: 8px;
-    }
-
-    &::-webkit-meter-optimum-value {
-      background: #3c5c00;
-    }
-
-    &::-webkit-meter-suboptimum-value {
-      background: #f5d000;
-    }
-
-    &::-webkit-meter-even-less-good-value {
-      background: #d14900;
-    }
-
-    &::-webkit-meter-inner-element {
-      display: block;
-    }
-
-    /* Firefox */
-    &::-moz-meter-bar {
-      border-radius: 8px;
-    }
-
-    &:-moz-meter-optimum::-moz-meter-bar {
-      background: #3c5c00;
-    }
-
-    &:-moz-meter-sub-optimum::-moz-meter-bar {
-      background: #f5d000;
-    }
-
-    &:-moz-meter-sub-sub-optimum::-moz-meter-bar {
-      background: #d14900;
-    }
-  }
-
-  & > dl {
-    position: absolute;
-    width: 100%;
-    margin: 0;
-    padding: 0 1em;
-    box-sizing: border-box;
-    top: 0.5em;
-    display: flex;
-    align-items: stretch;
-    font-size: 0.75em;
-
-    & > dt:not(:first-of-type) {
-      margin-inline-start: auto;
-    }
-
-    & > dd {
-      margin-inline-start: 0.5em;
+    &::-moz-progress-bar {
+      @include tiny-checkers;
     }
   }
 }

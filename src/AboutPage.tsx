@@ -17,6 +17,7 @@ export default function AboutPage({ className, children, onCancel }: AboutPagePr
   return (
     <SectionPage className={classnames('about-page', className)}>
       <h1>Weft!</h1>
+
       <h2>An experimental, offline-first* self recording web app</h2>
 
       <p>
@@ -24,6 +25,14 @@ export default function AboutPage({ className, children, onCancel }: AboutPagePr
       </p>
       <p>
         Icons from <a href="https://icons.getbootstrap.com/">Bootstrap Icons</a>
+      </p>
+
+      <p>
+        Styling is a bit all over the place; please bear with me while I "master" <em>*sob*</em> the
+        dark arts of{' '}
+        <a rel="noreferrer" href="https://en.wikipedia.org/wiki/CSS" target="_blank">
+          Cascading Style Sheets.
+        </a>
       </p>
 
       <p>
