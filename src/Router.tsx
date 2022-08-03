@@ -264,10 +264,8 @@ export function LinkToPath<Pattern extends string>({
 
 export const Link = LinkToPath;
 
-type GenericRouteRenderer = (params?: StringParams) => JSX.Element | false | null;
-type RouteMatchRenderer<Pattern extends string> = (
-  params: Params<Pattern>
-) => JSX.Element | false | null;
+type GenericRouteRenderer = (params?: StringParams) => ReactNode;
+type RouteMatchRenderer<Pattern extends string> = (params: Params<Pattern>) => ReactNode;
 type RouteChildren<Pattern extends string> = ReactNode | RouteMatchRenderer<Pattern>;
 
 type RouteProps<Pattern extends string> = {
