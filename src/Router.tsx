@@ -171,12 +171,14 @@ export function Router({ history, children }: RouterProps) {
     <HistoryContext.Provider value={history}>
       {Children.map(children, (child) => {
         if (isRouteElement(child)) {
-          const routeParams = compiledRoutesCache.isMatch(child.props.path.pattern, currentPath);
+          const { children: content, path } = child.props;
+          const routeParams = compiledRoutesCache.isMatch(path.pattern, currentPath);
           if (routeParams) {
-            const routeChildren = child.props.children;
             return (
               <RouteParamsContext.Provider value={routeParams}>
-                {typeof routeChildren === 'function' ? routeChildren(routeParams) : routeChildren}
+                {typeof content === 'function'
+                  ? (content as GenericRouteRenderer)(routeParams)
+                  : content}
               </RouteParamsContext.Provider>
             );
           }
@@ -262,12 +264,15 @@ export function LinkToPath<Pattern extends string>({
 
 export const Link = LinkToPath;
 
-type RouteMatchRenderer = (params: StringParams) => JSX.Element;
-type RouteChildren = ReactNode | RouteMatchRenderer;
+type GenericRouteRenderer = (params?: StringParams) => JSX.Element | false | null;
+type RouteMatchRenderer<Pattern extends string> = (
+  params: Params<Pattern>
+) => JSX.Element | false | null;
+type RouteChildren<Pattern extends string> = ReactNode | RouteMatchRenderer<Pattern>;
 
 type RouteProps<Pattern extends string> = {
   readonly path: Path<Pattern>;
-  readonly children?: RouteChildren;
+  readonly children?: RouteChildren<Pattern>;
 };
 
 /**
