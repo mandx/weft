@@ -17,6 +17,7 @@ export default function AboutPage({ className, children, onCancel }: AboutPagePr
   return (
     <SectionPage className={classnames('about-page', className)}>
       <h1>Weft!</h1>
+
       <h2>An experimental, offline-first* self recording web app</h2>
 
       <p>
