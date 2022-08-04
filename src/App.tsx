@@ -7,7 +7,7 @@ import Recording from './Recording';
 import Homescreen from './Homescreen';
 import Notifications, { createNotificationsEmitter } from './Notifications';
 import { useConstant, useDynamicStylesheet } from './hooks';
-import { createHistory, PathHistory, Fallback, Link, Route, Router, Switch } from './Router';
+import { createHistory, PathHistory, Fallback, Link, Route, Router } from './Router';
 import * as paths from './app-routes';
 import { useRecordings } from './storage-swr';
 import RecordingPlayer from './RecordingPlayer';
@@ -99,32 +99,30 @@ export default function App() {
           </h1>
         </header>
       </nav>
-      <Switch>
-        <Route path={paths.record}>
-          <Recorder
-            onNewRecording={addNewRecording}
-            emitNotification={notificationsEmitter.emit}
-            onRecordingStateChange={noop}
-          />
-        </Route>
-        <Route path={paths.recordingPlay}>
-          <RecordingPlayer />
-        </Route>
-        <Route path={paths.recordingEdit}>
-          <RecordingPlayer editMode />
-        </Route>
-        <Route path={paths.about}>
-          <AboutPage onCancel={historyGoBack}>
-            <StorageEstimateBar />
-          </AboutPage>
-        </Route>
-        <Route path={paths.settings}>
-          <Settings onCancel={historyGoBack} onSelectedAppBackground={selectedAppBackground} />
-        </Route>
-        <Fallback onRouteNotMatched={handleRouteNotMatched}>
-          <Homescreen onPlayRecording={onPlayRecording} />
-        </Fallback>
-      </Switch>
+      <Route path={paths.record}>
+        <Recorder
+          onNewRecording={addNewRecording}
+          emitNotification={notificationsEmitter.emit}
+          onRecordingStateChange={noop}
+        />
+      </Route>
+      <Route path={paths.recordingPlay}>
+        <RecordingPlayer />
+      </Route>
+      <Route path={paths.recordingEdit}>
+        <RecordingPlayer editMode />
+      </Route>
+      <Route path={paths.about}>
+        <AboutPage onCancel={historyGoBack}>
+          <StorageEstimateBar />
+        </AboutPage>
+      </Route>
+      <Route path={paths.settings}>
+        <Settings onCancel={historyGoBack} onSelectedAppBackground={selectedAppBackground} />
+      </Route>
+      <Fallback onRouteNotMatched={handleRouteNotMatched}>
+        <Homescreen onPlayRecording={onPlayRecording} />
+      </Fallback>
       <Notifications emitter={notificationsEmitter} />
     </Router>
   );

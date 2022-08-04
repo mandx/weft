@@ -14,7 +14,6 @@ import { Blocker, createBrowserHistory, Listener } from 'history';
 import { Params, Path } from 'static-path';
 import { pathToRegexp, Key as RouteKey } from 'path-to-regexp';
 import { useConstant } from './hooks';
-import { identity } from './utilities';
 
 export const createHistory = createBrowserHistory;
 type HistoryBackend = ReturnType<typeof createHistory>;
@@ -144,14 +143,16 @@ function isRouteElement<Pattern extends string>(
   return !!element && (element as any)?.type === Route && isPath((element as any)?.props?.path);
 }
 
-function isSwitchElement(element: unknown): element is ReactElement<SwitchProps, typeof Switch> {
-  return !!element && (element as any)?.type === Switch;
-}
-
 function isFallbackElement(
   element: unknown
 ): element is ReactElement<FallbackProps, typeof Fallback> {
   return !!element && (element as any)?.type === Fallback;
+}
+
+function isRouterElement(
+  element: unknown
+): element is ReactElement<RouterProps, typeof Router> {
+  return !!element && (element as any)?.type === Router;
 }
 
 export interface RouterProps {
@@ -167,13 +168,17 @@ export function Router({ history, children }: RouterProps) {
     () => window.location.pathname
   );
 
+  let fallback: ReturnType<typeof cloneElement<FallbackProps>> | undefined = undefined;
+  let routeMatchFound;
+
   return (
     <HistoryContext.Provider value={history}>
-      {Children.map(children, (child) => {
-        if (isRouteElement(child)) {
-          const { children: content, path } = child.props;
+      {Children.map(children, (element) => {
+        if (isRouteElement(element)) {
+          const { children: content, path } = element.props;
           const routeParams = compiledRoutesCache.isMatch(path.pattern, currentPath);
           if (routeParams) {
+            routeMatchFound = true;
             return (
               <RouteParamsContext.Provider value={routeParams}>
                 {typeof content === 'function'
@@ -181,41 +186,23 @@ export function Router({ history, children }: RouterProps) {
                   : content}
               </RouteParamsContext.Provider>
             );
+          } else {
+            return null;
           }
         }
 
-        if (isSwitchElement(child) && Children.count(child.props.children)) {
-          let fallback: ReturnType<typeof cloneElement<FallbackProps>> | undefined = undefined;
+        if (isRouterElement(element)) {
 
-          for (const switchChild of Children.map(child.props.children, identity) || []) {
-            if (isRouteElement(switchChild)) {
-              const routeParams = compiledRoutesCache.isMatch(
-                switchChild.props.path.pattern,
-                currentPath
-              );
-              if (routeParams) {
-                return (
-                  <RouteParamsContext.Provider value={routeParams}>
-                    {switchChild}
-                  </RouteParamsContext.Provider>
-                );
-              }
-            }
-
-            if (
-              !fallback &&
-              isFallbackElement(switchChild) &&
-              Children.count(switchChild.props.children)
-            ) {
-              fallback = cloneElement(switchChild, { routeNoMatched: currentPath });
-            }
-          }
-
-          return fallback || null;
         }
 
-        return child;
+        if (!fallback && isFallbackElement(element) && Children.count(element.props.children)) {
+          fallback = cloneElement(element, { routeNoMatched: currentPath });
+          return null;
+        }
+
+        return element;
       })}
+      {!routeMatchFound && fallback}
     </HistoryContext.Provider>
   );
 }
@@ -281,14 +268,6 @@ type RouteProps<Pattern extends string> = {
  * TODO: Allow for defining function-as-children
  */
 export function Route<Pattern extends string>(props: RouteProps<Pattern>) {
-  return <>{props.children}</>;
-}
-
-interface SwitchProps {
-  readonly children?: ReactElement<unknown, typeof Route> | ReactElement<unknown, typeof Route>[];
-}
-
-export function Switch(props: SwitchProps) {
   return <>{props.children}</>;
 }
 
