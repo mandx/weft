@@ -149,12 +149,6 @@ function isFallbackElement(
   return !!element && (element as any)?.type === Fallback;
 }
 
-function isRouterElement(
-  element: unknown
-): element is ReactElement<RouterProps, typeof Router> {
-  return !!element && (element as any)?.type === Router;
-}
-
 export interface RouterProps {
   readonly history: HistoryImpl;
   readonly children: React.ReactNode;
@@ -189,10 +183,6 @@ export function Router({ history, children }: RouterProps) {
           } else {
             return null;
           }
-        }
-
-        if (isRouterElement(element)) {
-
         }
 
         if (!fallback && isFallbackElement(element) && Children.count(element.props.children)) {
